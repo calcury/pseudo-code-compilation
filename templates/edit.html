@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>伪代码在线测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://labit.pythonanywhere.com/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-code"></i> UNNC 伪代码</h1>
+            <p>伪代码在线编译运行</p>
+        </div>
+
+        <div class="editor-section">
+            <div class="editor-header">
+                <div class="editor-title">
+                    <i class="fas fa-edit"></i> 编辑器
+                </div>
+                <button class="btn btn-compile" onclick="compileCode()">
+                    <i class="fas fa-cogs"></i> 编译结果
+                </button>
+            </div>
+            <textarea class="code-editor" id="pseudoCode" placeholder="输入伪代码" spellcheck="false"></textarea>
+        </div>
+
+        <div class="control-section">
+            <div class="function-call-group">
+                <span class="function-call-label">执行的函数：</span>
+                <input type="text" class="function-call-input" id="functionCall" value="" placeholder="输入调用的函数" spellcheck="false">
+            </div>
+            <div class="button-group">
+                <button class="btn btn-run" onclick="runCode()">
+                    <i class="fas fa-play"></i> 运行
+                </button>
+                <button class="btn btn-sample" onclick="openSampleModal()">
+                    <i class="fas fa-book"></i> 样例
+                </button>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <div class="output-header">
+                <div class="output-title">
+                    <i class="fas fa-terminal"></i> 运行结果
+                </div>
+            </div>
+            <div class="output-content" id="output">
+                <span class="info">运行结果...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编译结果弹窗 -->
+    <div id="compileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-code"></i> 编译结果
+                </div>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre class="python-code" id="pythonCode">编译后的代码将显示在这里...</pre>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-copy" onclick="copyPythonCode()">
+                    <i class="fas fa-copy"></i> 复制
+                </button>
+                <button class="btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i> 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 样例弹窗 -->
+    <div id="sampleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-book"></i> 选择样例
+                </div>
+                <span class="close" onclick="closeSampleModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="sample-list" id="sampleList">
+                    <!-- 样例列表会通过JS生成 -->
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn" onclick="closeSampleModal()">
+                    <i class="fas fa-times"></i> 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 样例数据
+        const sampleData = [
+            {
+                name: "阶乘计算 (factorial)",
+                description: "计算一个非负整数的阶乘",
+                code: `Algorithm: factorial(n)
+Requires: an integer n
+Returns: an integer
+if n == 0 then
+    return 1
+else
+    return n * factorial(n-1)
+endif`,
+                functionCall: "factorial(5)"
+            },
+            {
+                name: "斐波那契数列 (fibonacci)",
+                description: "计算斐波那契数列的第n项",
+                code: `Algorithm: fibonacci(n)
+Requires: an integer n
+Returns: an integer
+if n <= 1 then
+    return n
+else
+    return fibonacci(n-1) + fibonacci(n-2)
+endif`,
+                functionCall: "fibonacci(8)"
+            },
+            {
+                name: "列表求和 (sumlist)",
+                description: "计算列表元素和",
+                code: `Algorithm: sumlist(l)
+Requires: a list l
+Returns: an integer
+if isEmpty(l) then
+    return 0
+else
+    return value(l) + sumlist(tail(l))
+endif`,
+                functionCall: "sumlist([1,3,5,7])"
+            },
+            {
+                name: "二叉树的高度 (hight)",
+                description: "计算二叉树的高度",
+                code: `Algorithm: hight(t)
+Requires: a tree t
+Returns: an integer
+if isLeaf(t) then
+    return 0
+else
+    return 1 + max(hight(left(t)),hight(right(t)))
+endif`,
+                functionCall: "hight(node(node(leaf,1,leaf),2,node(node(leaf,3,leaf),4,node(leaf,5,leaf))))"
+            }
+        ];
+
+        // 页面加载时从localStorage恢复数据
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedCode = localStorage.getItem('pseudoCode');
+            const savedFunctionCall = localStorage.getItem('functionCall');
+            
+            if (savedCode) {
+                document.getElementById('pseudoCode').value = savedCode;
+            }
+            
+            if (savedFunctionCall) {
+                document.getElementById('functionCall').value = savedFunctionCall;
+            }
+
+            // 初始化样例列表
+            initSampleList();
+        });
+
+        // 监听编辑器和函数调用输入框的变化，自动保存到localStorage
+        document.getElementById('pseudoCode').addEventListener('input', function() {
+            localStorage.setItem('pseudoCode', this.value);
+        });
+
+        document.getElementById('functionCall').addEventListener('input', function() {
+            localStorage.setItem('functionCall', this.value);
+        });
+
+        // 初始化样例列表
+        function initSampleList() {
+            const sampleList = document.getElementById('sampleList');
+            sampleList.innerHTML = '';
+            
+            sampleData.forEach((sample, index) => {
+                const sampleItem = document.createElement('div');
+                sampleItem.className = 'sample-item';
+                sampleItem.innerHTML = `
+                    <h4>${sample.name}</h4>
+                    <p>功能描述：${sample.description}</p>
+                    <div class="sample-desc">点击选择此样例</div>
+                `;
+                sampleItem.onclick = function() {
+                    selectSample(index);
+                };
+                sampleList.appendChild(sampleItem);
+            });
+        }
+
+        // 打开样例弹窗
+        function openSampleModal() {
+            document.getElementById('sampleModal').style.display = 'block';
+        }
+
+        // 关闭样例弹窗
+        function closeSampleModal() {
+            document.getElementById('sampleModal').style.display = 'none';
+        }
+
+        // 选择样例
+        function selectSample(index) {
+            const sample = sampleData[index];
+            document.getElementById('pseudoCode').value = sample.code;
+            document.getElementById('functionCall').value = sample.functionCall;
+            
+            // 保存到localStorage
+            localStorage.setItem('pseudoCode', sample.code);
+            localStorage.setItem('functionCall', sample.functionCall);
+            
+            closeSampleModal();
+            
+            // 提示选择成功
+            const tempAlert = document.createElement('div');
+            tempAlert.style.position = 'fixed';
+            tempAlert.style.top = '20px';
+            tempAlert.style.left = '50%';
+            tempAlert.style.transform = 'translateX(-50%)';
+            tempAlert.style.background = '#27ae60';
+            tempAlert.style.color = 'white';
+            tempAlert.style.padding = '10px 20px';
+            tempAlert.style.borderRadius = '5px';
+            tempAlert.style.zIndex = '9999';
+            tempAlert.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            tempAlert.textContent = '✅ 样例已加载！';
+            document.body.appendChild(tempAlert);
+            
+            setTimeout(() => {
+                tempAlert.style.opacity = '0';
+                tempAlert.style.transition = 'opacity 0.5s';
+                setTimeout(() => document.body.removeChild(tempAlert), 500);
+            }, 2000);
+        }
+
+        // 编译代码
+        function compileCode() {
+            const pseudoCode = document.getElementById('pseudoCode').value;
+            const modal = document.getElementById('compileModal');
+            const pythonCode = document.getElementById('pythonCode');
+
+            // 清空之前的样式
+            pythonCode.className = 'python-code';
+            
+            fetch('/compile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pseudo_code: pseudoCode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    pythonCode.textContent = data.python_code;
+                    pythonCode.innerHTML = pythonCode.textContent.replace(/(Error:|错误:)/g, '<span class="error">$1</span>');
+                } else {
+                    // 编译错误用红色显示
+                    const errorMsg = `# 编译错误:\n# ${data.error}`;
+                    pythonCode.innerHTML = errorMsg.replace(/(编译错误:|Error:)/g, '<span class="error">$1</span>');
+                }
+                modal.style.display = 'block';
+            })
+            .catch(error => {
+                // 服务器连接失败也用红色显示
+                const errorMsg = `服务器连接失败，请检查网络或联系管理员\n错误详情: ${error.message}`;
+                pythonCode.innerHTML = errorMsg.replace(/(服务器连接失败|错误详情:)/g, '<span class="error">$1</span>');
+                modal.style.display = 'block';
+            });
+        }
+
+        // 运行代码
+        function runCode() {
+            const pseudoCode = document.getElementById('pseudoCode').value;
+            const functionCall = document.getElementById('functionCall').value;
+            const output = document.getElementById('output');
+            const runBtn = document.querySelector('.btn-run');
+
+            // 验证输入
+            if (!pseudoCode.trim()) {
+                output.innerHTML = '<span class="error">错误：请输入伪代码！</span>';
+                return;
+            }
+            
+            if (!functionCall.trim()) {
+                output.innerHTML = '<span class="error">错误：请输入要执行的函数调用！</span>';
+                return;
+            }
+
+            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 运行中...';
+            runBtn.disabled = true;
+            output.innerHTML = '<span class="info">正在运行...</span>';
+
+            fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pseudo_code: pseudoCode,
+                    function_call: functionCall
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP错误！状态码：${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 成功结果用绿色显示
+                    output.innerHTML = `<span class="success">✅ 运行结果：${data.output}</span>`;
+                } else {
+                    // 运行错误用红色显示
+                    output.innerHTML = `<span class="error">❌ 运行错误：${data.error}</span>`;
+                }
+            })
+            .catch(error => {
+                // 网络错误或其他错误也用红色显示
+                output.innerHTML = `<span class="error">❌ 请求失败：${error.message}</span>`;
+            })
+            .finally(() => {
+                runBtn.innerHTML = '<i class="fas fa-play"></i> 运行';
+                runBtn.disabled = false;
+            });
+        }
+
+        // 关闭编译弹窗
+        function closeModal() {
+            document.getElementById('compileModal').style.display = 'none';
+        }
+
+        // 复制Python代码
+        function copyPythonCode() {
+            const pythonCode = document.getElementById('pythonCode');
+            // 获取纯文本内容（去除HTML标签）
+            const textContent = pythonCode.textContent || pythonCode.innerText;
+            
+            navigator.clipboard.writeText(textContent)
+            .then(() => {
+                // 复制成功提示
+                const tempAlert = document.createElement('div');
+                tempAlert.style.position = 'fixed';
+                tempAlert.style.top = '20px';
+                tempAlert.style.left = '50%';
+                tempAlert.style.transform = 'translateX(-50%)';
+                tempAlert.style.background = '#27ae60';
+                tempAlert.style.color = 'white';
+                tempAlert.style.padding = '10px 20px';
+                tempAlert.style.borderRadius = '5px';
+                tempAlert.style.zIndex = '9999';
+                tempAlert.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                tempAlert.textContent = '✅ 代码已复制到剪贴板！';
+                document.body.appendChild(tempAlert);
+                
+                setTimeout(() => {
+                    tempAlert.style.opacity = '0';
+                    tempAlert.style.transition = 'opacity 0.5s';
+                    setTimeout(() => document.body.removeChild(tempAlert), 500);
+                }, 2000);
+            })
+            .catch(err => {
+                alert('❌ 复制失败：' + err.message);
+            });
+        }
+
+        // 点击弹窗外部关闭
+        window.onclick = function(event) {
+            const compileModal = document.getElementById('compileModal');
+            const sampleModal = document.getElementById('sampleModal');
+            
+            if (event.target === compileModal) {
+                closeModal();
+            }
+            
+            if (event.target === sampleModal) {
+                closeSampleModal();
+            }
+        }
+        
+    </script>
+</body>
+</html>

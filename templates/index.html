@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>伪代码在线测试</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>UCCN伪代码在线调试助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -16,12 +16,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            max-width: 900px;
+            width: 100%;
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
@@ -31,12 +34,12 @@
         .header {
             background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
             color: white;
-            padding: 25px;
+            padding: 25px 20px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.2em;
+            font-size: 2em;
             margin-bottom: 8px;
             font-weight: 300;
         }
@@ -44,277 +47,140 @@
         .header p {
             opacity: 0.9;
             font-size: 1em;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.5;
         }
 
-        .editor-section {
-            padding: 0;
+        /* 核心内容区 */
+        .main-content {
+            padding: 20px 20px 15px;
         }
 
-        .editor-header {
-            background: #f8f9fa;
-            padding: 15px 25px;
-            border-bottom: 1px solid #e1e8ed;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* 操作按钮区 */
+        .action-section {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
-        .editor-title {
-            font-size: 1.2em;
-            font-weight: 600;
+        .action-section p {
             color: #2c3e50;
+            font-size: 1em;
+            margin-bottom: 18px;
+            line-height: 1.5;
         }
 
         .btn {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             transition: all 0.3s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
+            margin: 0 8px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .btn-compile {
+        .btn-enter {
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            padding: 13px 30px;
+            font-size: 16px;
         }
 
-        .btn-run {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        .btn-github {
+            background: linear-gradient(135deg, #333 0%, #555 100%);
         }
 
-        .btn-compile:hover {
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
-        }
-
-        .btn-run:hover {
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-
-        .code-editor {
-            width: 100%;
-            height: 400px;
-            padding: 25px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 15px;
-            line-height: 1.6;
-            border: none;
-            resize: none;
-            outline: none;
-            background: #fafbfc;
-        }
-
-        .control-section {
-            background: #f8f9fa;
-            padding: 20px 25px;
-            border-bottom: 1px solid #e1e8ed;
-            display: flex;
+        /* 功能介绍区 */
+        .intro-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
+            margin-bottom: 5px;
         }
 
-        .function-call-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
+        .intro-card {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+            transition: transform 0.3s ease;
         }
 
-        .function-call-label {
-            font-weight: 600;
-            color: #2c3e50;
-            white-space: nowrap;
+        .intro-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
         }
 
-        .function-call-input {
-            flex: 1;
-            padding: 12px 20px;
-            border: 2px solid #e1e8ed;
-            border-radius: 10px;
-            font-family: 'Consolas', monospace;
-            font-size: 15px;
-            transition: border-color 0.3s ease;
-            min-width: 300px;
-        }
-
-        .function-call-input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .output-section {
-            padding: 25px;
-            background: #fafbfc;
-        }
-
-        .output-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .output-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .output-content {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            min-height: 120px;
-            white-space: pre-wrap;
-            overflow-y: auto;
-            max-height: 300px;
-        }
-
-        .success {
-            color: #27ae60;
-        }
-
-        .error {
-            color: #e74c3c;
-        }
-
-        .info {
+        .intro-card i {
+            font-size: 1.8em;
             color: #3498db;
+            margin-bottom: 10px;
+            display: block;
         }
 
-        /* 弹窗样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
+        .intro-card h3 {
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 900px;
-            max-height: 80vh;
-            overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-            animation: modalSlideIn 0.3s ease;
+        .intro-card p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.9em;
         }
 
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* 页脚 */
+        .footer {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-top: 1px solid #e1e8ed;
+            text-align: center;
         }
 
-        .modal-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .footer p {
+            color: #666;
+            font-size: 0.85em;
+            line-height: 1.5;
         }
 
-        .modal-title {
-            font-size: 1.3em;
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
             font-weight: 500;
         }
 
-        .close {
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
+        .footer a:hover {
+            text-decoration: underline;
         }
 
-        .close:hover {
-            opacity: 0.7;
-        }
-
-        .modal-body {
-            padding: 0;
-        }
-
-        .python-code {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 25px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #e1e8ed;
-        }
-
-        .btn-copy {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-        }
-
-        .btn-copy:hover {
-            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.4);
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .control-section {
-                flex-direction: column;
-                align-items: stretch;
+        /* 响应式适配 */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .intro-section {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
 
-            .function-call-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .function-call-input {
-                min-width: auto;
-            }
-
-            .button-group {
+            .btn {
+                display: block;
+                margin: 8px auto;
+                width: 85%;
                 justify-content: center;
             }
         }
@@ -322,200 +188,53 @@
 </head>
 <body>
     <div class="container">
+        <!-- 头部标题区 -->
         <div class="header">
-            <h1><i class="fas fa-code"></i> UNNC伪代码在线调试</h1>
-            <p>将伪代码转换为Python并实时运行测试</p>
+            <h1>UCCN伪代码在线调试助手</h1>
+            <p>轻量级伪代码调试工具，支持UCCN规范语法校验、逻辑运行和结果可视化</p>
         </div>
 
-        <div class="editor-section">
-            <div class="editor-header">
-                <div class="editor-title">
-                    <i class="fas fa-edit"></i> 伪代码编辑器
+        <!-- 核心内容区 -->
+        <div class="main-content">
+            <!-- 操作按钮区 -->
+            <div class="action-section">
+                <p>无需安装软件，点击按钮即可进入调试界面</p>
+                <a href="#editor" class="btn btn-enter">
+                    <i class="fas fa-rocket"></i>
+                    开始调试
+                </a>
+                <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank" class="btn btn-github">
+                    <i class="fab fa-github"></i>
+                    查看GitHub源码
+                </a>
+            </div>
+
+            <!-- 功能介绍卡片 -->
+            <div class="intro-section">
+                <div class="intro-card">
+                    <i class="fas fa-code"></i>
+                    <h3>语法兼容</h3>
+                    <p>适配UCCN伪代码规范，支持条件判断、函数调用等核心语法</p>
                 </div>
-                <button class="btn btn-compile" onclick="compileCode()">
-                    <i class="fas fa-cogs"></i> 查看编译结果
-                </button>
-            </div>
-            <textarea class="code-editor" id="pseudoCode" placeholder="输入伪代码，例如：&#10;Algorithm: factorial(n)&#10;if n == 0 then&#10;    return 1&#10;else&#10;    return n * factorial(n-1)&#10;endif">Algorithm: factorial(n)
-if n == 0 then
-    return 1
-else
-    return n * factorial(n-1)
-endif</textarea>
-        </div>
-
-        <div class="control-section">
-            <div class="function-call-group">
-                <span class="function-call-label">函数调用：</span>
-                <input type="text" class="function-call-input" id="functionCall" value="output=factorial(5)" placeholder="输入函数调用，例如：output=factorial(5)">
-            </div>
-            <div class="button-group">
-                <button class="btn btn-run" onclick="runCode()">
-                    <i class="fas fa-play"></i> 运行代码
-                </button>
-            </div>
-        </div>
-
-        <div class="output-section">
-            <div class="output-header">
-                <div class="output-title">
-                    <i class="fas fa-terminal"></i> 运行结果
+                <div class="intro-card">
+                    <i class="fas fa-play-circle"></i>
+                    <h3>在线调试</h3>
+                    <p>实时编译运行，直观展示执行步骤和结果，定位逻辑错误</p>
                 </div>
             </div>
-            <div class="output-content" id="output">
-                <span class="info">运行结果将显示在这里...</span>
-            </div>
         </div>
-    </div>
 
-    <!-- 编译结果弹窗 -->
-    <div id="compileModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-code"></i> 编译结果 - Python代码
-                </div>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <pre class="python-code" id="pythonCode">编译后的Python代码将显示在这里...</pre>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-copy" onclick="copyPythonCode()">
-                    <i class="fas fa-copy"></i> 复制代码
-                </button>
-                <button class="btn" onclick="closeModal()">
-                    <i class="fas fa-times"></i> 关闭
-                </button>
-            </div>
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>© 2025 UCCN伪代码调试助手 | <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank">GitHub开源</a> | MIT协议</p>
         </div>
     </div>
 
     <script>
-        // 编译代码
-        function compileCode() {
-            const pseudoCode = document.getElementById('pseudoCode').value;
-            const modal = document.getElementById('compileModal');
-            const pythonCode = document.getElementById('pythonCode');
-
-            fetch('/compile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    pseudo_code: pseudoCode
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    pythonCode.textContent = data.python_code;
-                    modal.style.display = 'block';
-                } else {
-                    pythonCode.textContent = `# 编译错误:\n# ${data.error}`;
-                    modal.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                pythonCode.textContent = `# 请求失败:\n# ${error}`;
-                modal.style.display = 'block';
-            });
-        }
-
-        // 运行代码
-        function runCode() {
-            const pseudoCode = document.getElementById('pseudoCode').value;
-            const functionCall = document.getElementById('functionCall').value;
-            const output = document.getElementById('output');
-            const runBtn = document.querySelector('.btn-run');
-
-            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 运行中...';
-            runBtn.disabled = true;
-            output.innerHTML = '<span class="info">正在运行代码...</span>';
-
-            fetch('/run', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    pseudo_code: pseudoCode,
-                    function_call: functionCall
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    output.innerHTML = `<span class="success">${data.output}</span>`;
-                } else {
-                    output.innerHTML = `<span class="error">错误: ${data.error}</span>`;
-                }
-            })
-            .catch(error => {
-                output.innerHTML = `<span class="error">请求失败: ${error}</span>`;
-            })
-            .finally(() => {
-                runBtn.innerHTML = '<i class="fas fa-play"></i> 运行代码';
-                runBtn.disabled = false;
-            });
-        }
-
-        // 关闭弹窗
-        function closeModal() {
-            document.getElementById('compileModal').style.display = 'none';
-        }
-
-        // 复制Python代码
-        function copyPythonCode() {
-            const pythonCode = document.getElementById('pythonCode').textContent;
-            navigator.clipboard.writeText(pythonCode).then(() => {
-                alert('代码已复制到剪贴板！');
-            });
-        }
-
-        // 点击弹窗外部关闭
-        window.onclick = function(event) {
-            const modal = document.getElementById('compileModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        // 快捷键支持
-        document.addEventListener('keydown', function(event) {
-            // Ctrl + Enter 运行代码
-            if (event.ctrlKey && event.key === 'Enter') {
-                runCode();
-            }
-            // Ctrl + Shift + Enter 编译代码
-            if (event.ctrlKey && event.shiftKey && event.key === 'Enter') {
-                compileCode();
-            }
-        });
-
-        // 示例代码快捷输入
-        document.getElementById('pseudoCode').addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === '1') {
-                event.preventDefault();
-                this.value = `Algorithm: factorial(n)
-if n == 0 then
-    return 1
-else
-    return n * factorial(n-1)
-endif`;
-                document.getElementById('functionCall').value = 'output=factorial(5)';
-            }
-            if (event.ctrlKey && event.key === '2') {
-                event.preventDefault();
-                this.value = `Algorithm: fibonacci(n)
-if n <= 1 then
-    return n
-else
-    return fibonacci(n-1) + fibonacci(n-2)
-endif`;
-                document.getElementById('functionCall').value = 'output=fibonacci(6)';
-            }
+        // 跳转逻辑
+        document.querySelector('.btn-enter').addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = "https://labit.pythonanywhere.com/edit";
         });
     </script>
 </body>
