@@ -36,7 +36,11 @@ def pseudo_to_python(pseudo_code):
         '。': '.',
         '！': '!',
         '【': '[',
-        '】': ']'
+        '】': ']',
+        '&&': 'and',
+        '||': 'or',
+        'mod': '%',
+        '–': '-'
     }
 
     # 统一替换中文标点
@@ -50,14 +54,8 @@ def pseudo_to_python(pseudo_code):
     for i, line in enumerate(lines):
         original_line = line
         line = line.rstrip()  # 保留行首空格
-
+        line = re.sub(r'^\s*\d+\s*:\s*', '', line) #strip number
         if not line.strip():  # 空行
-            python_lines.append('')
-            continue
-
-        # 去除行尾注释
-        line = line.split('//')[0].strip()
-        if not line:
             continue
 
         if re.match(r'^(Require|Requires|Returns|Return)\s*:.*$', line, re.IGNORECASE):
@@ -67,8 +65,29 @@ def pseudo_to_python(pseudo_code):
         line = re.sub(r'\btrue\b', 'True', line, flags=re.IGNORECASE)
         line = re.sub(r'\bfalse\b', 'False', line, flags=re.IGNORECASE)
 
+        line = re.sub(r'\bif\b', 'if', line, flags=re.IGNORECASE)
+        line = re.sub(r'\belse\b', 'else', line, flags=re.IGNORECASE)
+        line = re.sub(r'\belseif\b', 'elseif', line, flags=re.IGNORECASE)
+        line = re.sub(r'\breturn\b', 'return', line, flags=re.IGNORECASE)
+        line = re.sub(r'\bendif\b', 'endif', line, flags=re.IGNORECASE)
+        line = re.sub(r'\blet\b', 'let', line, flags=re.IGNORECASE)
+
         # 处理函数定义
-        func_match = re.match(r'^Algorithm:\s*(\w+)\((.*?)\)', line)
+        func_match = re.match(r'^Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
+        if func_match:
+            func_name = func_match.group(1)
+            params = func_match.group(2)
+            python_lines.append(f"def {func_name}({params}):")
+            indent_level = 1
+            continue
+        func_match = re.match(r'^Sub-Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
+        if func_match:
+            func_name = func_match.group(1)
+            params = func_match.group(2)
+            python_lines.append(f"def {func_name}({params}):")
+            indent_level = 1
+            continue
+        func_match = re.match(r'^SubAlgorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
         if func_match:
             func_name = func_match.group(1)
             params = func_match.group(2)
@@ -81,19 +100,36 @@ def pseudo_to_python(pseudo_code):
             python_lines.append(' ' * (4 * indent_level) + line)
             continue
 
-        # 处理条件判断 - if
-        if_match = re.match(r'^if\s+(.+)\s+then$', line.strip())
-        if if_match:
-            condition = if_match.group(1).strip()
+        # 处理条件判断 - if (有then和无then两种情况)
+        if_match_with_then = re.match(r'^if\s+(.+)\s+then$', line.strip())
+        if_match_without_then = re.match(r'^if\s+(.+)$', line.strip())
+
+        if if_match_with_then:
+            condition = if_match_with_then.group(1).strip()
+            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            python_lines.append(' ' * (4 * indent_level) + f"if {condition}:")
+            indent_level += 1
+            continue
+        elif if_match_without_then:
+            condition = if_match_without_then.group(1).strip()
             condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
             python_lines.append(' ' * (4 * indent_level) + f"if {condition}:")
             indent_level += 1
             continue
 
-        # 处理条件判断 - elseif/else if
-        elseif_match = re.match(r'^(elseif|else if)\s+(.+)\s+then$', line.strip())
-        if elseif_match:
-            condition = elseif_match.group(2).strip()
+        # 处理条件判断 - elseif/else if (有then和无then两种情况)
+        elseif_match_with_then = re.match(r'^(elseif|else if)\s+(.+)\s+then$', line.strip())
+        elseif_match_without_then = re.match(r'^(elseif|else if)\s+(.+)$', line.strip())
+
+        if elseif_match_with_then:
+            condition = elseif_match_with_then.group(2).strip()
+            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            indent_level -= 1  # 回到上一级缩进
+            python_lines.append(' ' * (4 * indent_level) + f"elif {condition}:")
+            indent_level += 1
+            continue
+        elif elseif_match_without_then:
+            condition = elseif_match_without_then.group(2).strip()
             condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
             indent_level -= 1  # 回到上一级缩进
             python_lines.append(' ' * (4 * indent_level) + f"elif {condition}:")
@@ -238,7 +274,11 @@ if __name__ == "__main__":
             '。': '.',
             '！': '!',
             '【': '[',
-            '】': ']'
+            '】': ']',
+            '&&': 'and',
+            '||': 'or',
+            'mod': '%',
+            '–': '-'
         }
 
         # 统一替换中文标点
