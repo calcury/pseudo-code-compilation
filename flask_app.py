@@ -53,6 +53,8 @@ def pseudo_to_python(pseudo_code):
 
     for i, line in enumerate(lines):
         original_line = line
+        line = re.sub(r'\s*:', ':', line)
+        line = re.sub(r':\s*', ':', line)
         line = line.rstrip()  # 保留行首空格
         line = re.sub(r'^\s*\d+\s*:\s*', '', line) #strip number
         if not line.strip():  # 空行
