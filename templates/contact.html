@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系我们 - UCCN伪代码在线调试助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="description" content="联系UCCN伪代码调试助手开发团队，获取技术支持与反馈">
+    
+    <!-- Open Graph协议 - 用于QQ/微信分享 -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://labit.pythonanywhere.com/contact">
+    <meta property="og:title" content="联系我们 - UCCN伪代码在线调试助手">
+    <meta property="og:description" content="联系UCCN伪代码调试助手开发团队，获取技术支持与反馈">
+    <meta property="og:image" content="https://labit.pythonanywhere.com/static/img/pseudocode.png">
+    <meta property="og:site_name" content="UCCN编程工具">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 95%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 35px 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 12px;
+            font-weight: 400;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2em;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* 核心内容区 */
+        .main-content {
+            padding: 30px 25px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        /* 联系信息区 */
+        .contact-info {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .contact-info h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            font-weight: 600;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+        }
+
+        .contact-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .contact-details h3 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .contact-details p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .contact-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .contact-link:hover {
+            color: #2c3e50;
+            text-decoration: underline;
+        }
+
+        /* 联系表单区 */
+        .contact-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .contact-form h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 16px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 25px;
+            border-top: 1px solid #e1e8ed;
+            text-align: center;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .contact-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .contact-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                font-size: 17px;
+                padding: 15px 30px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .header p {
+                font-size: 1.1em;
+            }
+            
+            .contact-info, .contact-form {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部标题区 -->
+        <div class="header">
+            <h1>联系我们</h1>
+            <p>有任何问题或建议？我们很乐意听取您的反馈</p>
+        </div>
+
+        <!-- 核心内容区 -->
+        <div class="main-content">
+            <!-- 联系信息区 -->
+            <div class="contact-info">
+                <h2>联系方式</h2>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h3>个人联系</h3>
+                        <p>==邮箱==</p>
+                        <p><a href="mailto:your-email@example.com" class="contact-link">18106595178@163.com</a></p>
+                        <p>==微信==</p>
+                        <p><a class="contact-link">18106595178</a></p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h3>GitHub项目</h3>
+                        <p>访问项目仓库: <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank" class="contact-link">pseudo-code-compilation</a></p>
+                        <p>提交Issue或参与开发</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h3>技术交流</h3>
+                        <p>欢迎 Fork & Pull</p>
+                        <p>共同完善UCCN伪代码调试工具</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h3>问题反馈</h3>
+                        <p>发现Bug或有功能建议？</p>
+                        <p>请通过GitHub Issues或邮件联系我们</p>
+                    </div>
+                </div>
+            </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p><a href="https://github.com/calcury/pseudo-code-compilation" target="_blank">GitHub开源</a> | 欢迎 Fork & Star</p>
+            <p><a href="https://labit.pythonanywhere.com/index" target="_blank">返回首页</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 返回首页链接
+        document.querySelector('.footer a[href*="index"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = "https://labit.pythonanywhere.com/index";
+        });
+    </script>
+</body>
+</html>

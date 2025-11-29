@@ -37,6 +37,10 @@ def pseudo_to_python(pseudo_code):
         '！': '!',
         '【': '[',
         '】': ']',
+        "‘": "'",
+        "’": "'",
+        '“': '"',
+        '”': '"',
         '&&': 'and',
         '||': 'or',
         'mod': '%',
@@ -190,7 +194,7 @@ def extract_function_call(call_input):
         return call_input[7:].strip()  # 去掉'output='
     return call_input.strip()
 
-@app.route('/')
+@app.route('/index')
 def index():
     """返回前端页面"""
     return send_file('templates/index.html')
@@ -199,6 +203,11 @@ def index():
 def edit():
     """返回前端页面"""
     return send_file('templates/edit.html')
+
+@app.route('/contact')
+def error():
+    """返回前端页面"""
+    return send_file('templates/contact.html')
 
 @app.route('/compile', methods=['POST'])
 def compile_code():
@@ -228,7 +237,7 @@ def compile_code():
             'error': str(e),
             'python_code': ''
         })
-
+import time  # 需要导入time模块
 @app.route('/run', methods=['POST'])
 def run_code():
     """运行伪代码（包含func.py的内容）"""
@@ -259,8 +268,13 @@ def run_code():
 # 执行函数调用
 if __name__ == "__main__":
     try:
+        import time
+        start_time = time.time()
         result = {call_expression}
-        print(f"{{result}}")
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"执行结果: {{result}}")
+        print(f"执行时间: {{execution_time:.6f}} 秒")
     except Exception as e:
         print(f"错误: {{e}}")
         import traceback
@@ -280,6 +294,10 @@ if __name__ == "__main__":
             '&&': 'and',
             '||': 'or',
             'mod': '%',
+            "‘": "'",
+            "’": "'",
+            '“': '"',
+            '”': '"',
             '–': '-'
         }
 
@@ -293,21 +311,28 @@ if __name__ == "__main__":
             temp_file = f.name
 
         try:
+            # 记录总执行时间（包括启动进程的时间）
+            total_start_time = time.time()
+
             # 运行Python代码
             result = subprocess.run(
                 ['python', temp_file],
                 capture_output=True,
                 text=True,
-                timeout=10,  # 10秒超时
+                timeout=3,  # 10秒超时
                 encoding='utf-8'
             )
+
+            total_end_time = time.time()
+            total_execution_time = total_end_time - total_start_time
 
             output = result.stdout
             if result.stderr:
                 output += f"\nError:\n{result.stderr}"
 
         except subprocess.TimeoutExpired:
-            output = "Error: Timeout (10s)"
+            total_execution_time = 3.0  # 超时时间
+            output = "Error: Timeout (3s)"
         finally:
             # 清理临时文件
             if os.path.exists(temp_file):
@@ -316,7 +341,10 @@ if __name__ == "__main__":
         return jsonify({
             'success': True,
             'output': output,
-            'converted_python': full_code
+            'converted_python': full_code,
+            'execution_time': total_execution_time,  # 总执行时间（包括进程启动）
+            'execution_time_seconds': total_execution_time,
+            'execution_time_ms': total_execution_time * 1000  # 毫秒格式
         })
 
     except Exception as e:
