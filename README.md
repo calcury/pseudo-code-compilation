@@ -22,10 +22,10 @@ A lightweight and user-friendly online debugger for UCCN-standard pseudocode, de
 ✅ **Lightweight & Dependency-Free** - Pure frontend + Python backend architecture, no plugins/software installation required, cross-platform access  
 
 ## 在线体验 | Online Experience
-🌐 **立即使用**：[https://labit.pythonanywhere.com](https://labit.pythonanywhere.com)  
+🌐 **立即使用**：[https://labit.pythonanywhere.com](https://labit.pythonanywhere.com/index)  
 无需注册，打开浏览器即可开始调试，支持移动端/桌面端自适应布局  
 
-🌐 **Try it now**: [https://labit.pythonanywhere.com](https://labit.pythonanywhere.com)  
+🌐 **Try it now**: [https://labit.pythonanywhere.com](https://labit.pythonanywhere.com/index)  
 No registration required—start debugging immediately in your browser, with adaptive layout for mobile/desktop devices  
 
 ## 使用场景 | Use Cases
