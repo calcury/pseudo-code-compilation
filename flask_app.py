@@ -1,3 +1,4 @@
+import time  # 需要导入time模块
 from flask import Flask, request, jsonify, send_file
 import subprocess
 import tempfile
@@ -7,6 +8,8 @@ import re
 app = Flask(__name__)
 
 # 读取func.py文件的内容
+
+
 def read_func_py():
     """
     读取当前目录下的func.py文件内容
@@ -21,6 +24,7 @@ def read_func_py():
     except Exception as e:
         print(f"读取func.py时出错: {e}")
         return ""
+
 
 def pseudo_to_python(pseudo_code):
     """
@@ -60,7 +64,7 @@ def pseudo_to_python(pseudo_code):
         line = re.sub(r'\s*:', ':', line)
         line = re.sub(r':\s*', ':', line)
         line = line.rstrip()  # 保留行首空格
-        line = re.sub(r'^\s*\d+\s*:\s*', '', line) #strip number
+        line = re.sub(r'^\s*\d+\s*[:.,：。，·]?\s*', '', line)
         if not line.strip():  # 空行
             continue
 
@@ -79,21 +83,24 @@ def pseudo_to_python(pseudo_code):
         line = re.sub(r'\blet\b', 'let', line, flags=re.IGNORECASE)
 
         # 处理函数定义
-        func_match = re.match(r'^Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
+        func_match = re.match(
+            r'^Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
         if func_match:
             func_name = func_match.group(1)
             params = func_match.group(2)
             python_lines.append(f"def {func_name}({params}):")
             indent_level = 1
             continue
-        func_match = re.match(r'^Sub-Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
+        func_match = re.match(
+            r'^Sub-Algorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
         if func_match:
             func_name = func_match.group(1)
             params = func_match.group(2)
             python_lines.append(f"def {func_name}({params}):")
             indent_level = 1
             continue
-        func_match = re.match(r'^SubAlgorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
+        func_match = re.match(
+            r'^SubAlgorithm:\s*(\w+)\((.*?)\)', line, re.IGNORECASE)
         if func_match:
             func_name = func_match.group(1)
             params = func_match.group(2)
@@ -112,33 +119,41 @@ def pseudo_to_python(pseudo_code):
 
         if if_match_with_then:
             condition = if_match_with_then.group(1).strip()
-            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            condition = condition.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
             python_lines.append(' ' * (4 * indent_level) + f"if {condition}:")
             indent_level += 1
             continue
         elif if_match_without_then:
             condition = if_match_without_then.group(1).strip()
-            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            condition = condition.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
             python_lines.append(' ' * (4 * indent_level) + f"if {condition}:")
             indent_level += 1
             continue
 
         # 处理条件判断 - elseif/else if (有then和无then两种情况)
-        elseif_match_with_then = re.match(r'^(elseif|else if)\s+(.+)\s+then$', line.strip())
-        elseif_match_without_then = re.match(r'^(elseif|else if)\s+(.+)$', line.strip())
+        elseif_match_with_then = re.match(
+            r'^(elseif|else if)\s+(.+)\s+then$', line.strip())
+        elseif_match_without_then = re.match(
+            r'^(elseif|else if)\s+(.+)$', line.strip())
 
         if elseif_match_with_then:
             condition = elseif_match_with_then.group(2).strip()
-            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            condition = condition.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
             indent_level -= 1  # 回到上一级缩进
-            python_lines.append(' ' * (4 * indent_level) + f"elif {condition}:")
+            python_lines.append(
+                ' ' * (4 * indent_level) + f"elif {condition}:")
             indent_level += 1
             continue
         elif elseif_match_without_then:
             condition = elseif_match_without_then.group(2).strip()
-            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
+            condition = condition.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
             indent_level -= 1  # 回到上一级缩进
-            python_lines.append(' ' * (4 * indent_level) + f"elif {condition}:")
+            python_lines.append(
+                ' ' * (4 * indent_level) + f"elif {condition}:")
             indent_level += 1
             continue
 
@@ -164,27 +179,33 @@ def pseudo_to_python(pseudo_code):
         if let_match:
             var_name = let_match.group(1)
             var_value = let_match.group(2)
-            python_lines.append(' ' * (4 * indent_level) + f"{var_name} = {var_value}")
+            python_lines.append(' ' * (4 * indent_level) +
+                                f"{var_name} = {var_value}")
             continue
 
         # 处理while循环
         while_match = re.match(r'^while\s+(.+)\s+then$', line.strip())
         if while_match:
             condition = while_match.group(1).strip()
-            condition = condition.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
-            python_lines.append(' ' * (4 * indent_level) + f"while {condition}:")
+            condition = condition.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
+            python_lines.append(' ' * (4 * indent_level) +
+                                f"while {condition}:")
             indent_level += 1
             continue
 
         # 普通执行语句（保持原有缩进）
         if line.strip() and not line.startswith('Algorithm:'):
             # 转换操作符
-            converted_line = line.replace(' mod ', ' % ').replace(' and ', ' and ').replace(' or ', ' or ')
-            python_lines.append(' ' * (4 * indent_level) + converted_line.strip())
+            converted_line = line.replace(' mod ', ' % ').replace(
+                ' and ', ' and ').replace(' or ', ' or ')
+            python_lines.append(' ' * (4 * indent_level) +
+                                converted_line.strip())
 
     # 验证缩进是否正确
     final_code = '\n'.join(python_lines)
     return final_code
+
 
 def extract_function_call(call_input):
     """
@@ -194,20 +215,24 @@ def extract_function_call(call_input):
         return call_input[7:].strip()  # 去掉'output='
     return call_input.strip()
 
+
 @app.route('/index')
 def index():
     """返回前端页面"""
     return send_file('templates/index.html')
+
 
 @app.route('/edit')
 def edit():
     """返回前端页面"""
     return send_file('templates/edit.html')
 
+
 @app.route('/contact')
 def error():
     """返回前端页面"""
     return send_file('templates/contact.html')
+
 
 @app.route('/compile', methods=['POST'])
 def compile_code():
@@ -237,7 +262,8 @@ def compile_code():
             'error': str(e),
             'python_code': ''
         })
-import time  # 需要导入time模块
+
+
 @app.route('/run', methods=['POST'])
 def run_code():
     """运行伪代码（包含func.py的内容）"""
