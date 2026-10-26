@@ -1,279 +1,668 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UCCN伪代码在线调试助手</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="description" content="轻量级伪代码调试器，支持UCCN规范语法校验、逻辑运行和结果可视化">
-    
-    <!-- Open Graph协议 - 用于QQ/微信分享 -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://labit.pythonanywhere.com/index">
-    <meta property="og:title" content="UCCN伪代码在线调试助手">
-    <meta property="og:description" content="轻量级伪代码调试工具，支持UCCN规范语法校验、逻辑运行和结果可视化">
-    <meta property="og:image" content="https://labit.pythonanywhere.com/static/img/pseudocode.png">
-    <meta property="og:site_name" content="UCCN编程工具">
-    
-    <!-- 微信特定标签 -->
-    <meta property="wechat:page_type" content="article">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNNC Pseudocode Debugger</title>
+<meta name="description" content="Write, compile and debug UNNC pseudocode in your browser">
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://labit.pythonanywhere.com/index">
+<meta property="og:title" content="UNNC Pseudocode Debugger">
+<meta property="og:description" content="Write, compile and debug UNNC pseudocode in your browser">
+<meta property="og:image" content="https://labit.pythonanywhere.com/static/img/pseudocode.png">
+<meta property="og:site_name" content="UNNC">
 
-        .container {
-            max-width: 1100px;
-            width: 95%;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            overflow: hidden;
-        }
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0c0e">
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 35px 25px;
-            text-align: center;
-        }
+<!-- 首屏前置：主题 & 语言，避免闪烁 -->
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      var l = localStorage.getItem('lang');
+      if (l === 'zh') {
+        document.documentElement.lang = 'zh-CN';
+        document.title = 'UNNC 伪代码调试工具';
+      }
+    } catch (e) {}
+  })();
+</script>
 
-        .header h1 {
-            font-size: 2.8em;
-            margin-bottom: 12px;
-            font-weight: 400;
-        }
+<style>
+  /* ---------- 主题：亮色 ---------- */
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #f7f8f9;
+    --surface-hover: #f0f1f3;
+    --border: #e6e7ea;
+    --text: #111214;
+    --muted: #6b7280;
+    --btn-bg: #111214;
+    --btn-text: #ffffff;
+    --btn-hover: #2a2d33;
+    --ring: #2563eb;
+  }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.2em;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
+  /* ---------- 主题：暗色（跟随系统） ---------- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0b0c0e;
+      --surface: #14161a;
+      --surface-hover: #1b1e23;
+      --border: #24272d;
+      --text: #f2f3f5;
+      --muted: #9aa1ab;
+      --btn-bg: #f2f3f5;
+      --btn-text: #0b0c0e;
+      --btn-hover: #ffffff;
+      --ring: #6ea8ff;
+    }
+  }
 
-        /* 核心内容区 */
-        .main-content {
-            padding: 30px 25px 20px;
-        }
+  /* ---------- 主题：暗色（手动） ---------- */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b0c0e;
+    --surface: #14161a;
+    --surface-hover: #1b1e23;
+    --border: #24272d;
+    --text: #f2f3f5;
+    --muted: #9aa1ab;
+    --btn-bg: #f2f3f5;
+    --btn-text: #0b0c0e;
+    --btn-hover: #ffffff;
+    --ring: #6ea8ff;
+  }
 
-        /* 操作按钮区 */
-        .action-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+  /* ---------- 基础 ---------- */
+  * { box-sizing: border-box; }
 
-        .action-section p {
-            color: #2c3e50;
-            font-size: 1.2em;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
 
-        .btn {
-            color: white;
-            border: none;
-            padding: 16px 35px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            margin: 0 12px;
-        }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                 "Helvetica Neue", "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color .25s ease, color .25s ease;
+  }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
+  a { color: inherit; }
 
-        .btn-enter {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            padding: 18px 40px;
-            font-size: 20px;
-        }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
 
-        .btn-github {
-            background: linear-gradient(135deg, #333 0%, #555 100%);
-        }
+  /* ---------- 页面容器 ---------- */
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 44px) clamp(18px, 5vw, 44px) 40px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-        /* 功能介绍区 */
-        .intro-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 10px;
-        }
+  main { flex: 1 0 auto; }
 
-        .intro-card {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
-            transition: transform 0.3s ease;
-        }
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: clamp(28px, 5vw, 56px);
+  }
 
-        .intro-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
-        }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-decoration: none;
+    color: var(--text);
+  }
 
-        .intro-card i {
-            font-size: 2.5em;
-            color: #3498db;
-            margin-bottom: 15px;
-            display: block;
-        }
+  .brand-mark {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--text);
+  }
 
-        .intro-card h3 {
-            color: #2c3e50;
-            font-size: 1.5em;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
+  /* ---------- 顶部控制按钮 ---------- */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .intro-card p {
-            color: #666;
-            line-height: 1.6;
-            font-size: 1.1em;
-        }
+  .ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
 
-        /* 页脚 */
-        .footer {
-            background: #f8f9fa;
-            padding: 20px 25px;
-            border-top: 1px solid #e1e8ed;
-            text-align: center;
-        }
+  .ctrl:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
 
-        .footer p {
-            color: #666;
-            font-size: 1.05em;
-            line-height: 1.6;
-        }
+  .theme-icon { display: none; width: 16px; height: 16px; }
 
-        .footer a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 500;
-        }
+  .theme-toggle[data-mode="system"] .theme-icon[data-icon="system"],
+  .theme-toggle[data-mode="light"]  .theme-icon[data-icon="light"],
+  .theme-toggle[data-mode="dark"]   .theme-icon[data-icon="dark"] {
+    display: block;
+  }
 
-        .footer a:hover {
-            text-decoration: underline;
-        }
+  /* ---------- Hero ---------- */
+  .hero { padding: clamp(4px, 1.5vw, 20px) 0 clamp(36px, 5vw, 64px); }
 
-        /* 响应式适配 */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2.2em;
-            }
-            
-            .intro-section {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
+  .hero h1 {
+    margin: 0 0 16px;
+    font-size: clamp(32px, 5vw, 54px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    max-width: 16em;
+  }
 
-            .btn {
-                display: block;
-                margin: 10px auto;
-                width: 90%;
-                justify-content: center;
-                font-size: 17px;
-                padding: 15px 30px;
-            }
+  .lead {
+    margin: 0 0 clamp(24px, 4vw, 34px);
+    max-width: 44em;
+    font-size: clamp(15px, 1.5vw, 17px);
+    color: var(--muted);
+  }
 
-            .btn-enter {
-                font-size: 18px;
-                padding: 16px 35px;
-            }
+  /* ---------- 按钮 ---------- */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-            .intro-card h3 {
-                font-size: 1.3em;
-            }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 22px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease,
+                border-color .2s ease, transform .12s ease;
+  }
 
-            .intro-card p {
-                font-size: 1em;
-            }
-        }
+  .btn svg { flex: none; }
+  .btn:active { transform: translateY(1px); }
 
-        @media (max-width: 500px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .header p {
-                font-size: 1.1em;
-            }
-        }
-    </style>
+  .btn-primary {
+    background: var(--btn-bg);
+    color: var(--btn-text);
+  }
+  .btn-primary:hover { background: var(--btn-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface-hover); }
+
+  /* ---------- 功能卡片 ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+
+  .card:hover { border-color: var(--muted); }
+
+  .card-icon {
+    display: block;
+    margin-bottom: 14px;
+    color: var(--muted);
+  }
+
+  .card h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 34em;
+  }
+
+  /* ---------- 页脚 ---------- */
+  .footer {
+    flex: none;
+    margin-top: clamp(44px, 6vw, 72px);
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .footer p { margin: 0; }
+
+  .footer a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: border-color .2s ease;
+  }
+
+  .footer a:hover { border-bottom-color: currentColor; }
+
+  /* ---------- 桌面端：横向卡片 ---------- */
+  @media (min-width: 901px) {
+    .features { gap: 20px; }
+
+    .card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 20px;
+      row-gap: 4px;
+      align-items: start;
+      padding: 30px 32px;
+    }
+
+    .card-icon {
+      grid-row: 1 / 3;
+      margin: 2px 0 0;
+    }
+
+    .card h2 {
+      grid-column: 2;
+      margin-bottom: 0;
+      font-size: 17px;
+    }
+
+    .card p {
+      grid-column: 2;
+      font-size: 15px;
+    }
+  }
+
+  /* ---------- 移动端 ---------- */
+  @media (max-width: 600px) {
+    .features { grid-template-columns: 1fr; }
+
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn { width: 100%; }
+
+    .hero { padding-top: 0; }
+
+    .footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .theme-label { display: none; }
+    .theme-toggle { padding: 0 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- 头部标题区 -->
-        <div class="header">
-            <h1>UCCN伪代码助手</h1>
-            <p>轻量级伪代码调试工具，支持UCCN规范语法校验、逻辑运行和结果可视化</p>
+  <div class="page">
+
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span data-i18n="brand">UNNC</span>
+      </a>
+
+      <div class="controls">
+        <!-- 联系我们 -->
+        <a id="contactLink" class="ctrl" href="/contact" aria-label="Contact">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7
+                     8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
+                     8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5
+                     a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          <span data-i18n="nav.contact">Contact</span>
+        </a>
+
+        <!-- 语言切换 -->
+        <button id="langToggle" class="ctrl lang-toggle" type="button" aria-label="Switch to Chinese">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18"></path>
+            <path d="M12 3c2.4 2.6 2.4 15.4 0 18"></path>
+            <path d="M12 3c-2.4 2.6-2.4 15.4 0 18"></path>
+          </svg>
+          <span class="lang-label">中文</span>
+        </button>
+
+        <!-- 主题切换 -->
+        <button id="themeToggle" class="ctrl theme-toggle" type="button" data-mode="system" aria-label="Current theme: System. Click to switch.">
+          <svg class="theme-icon" data-icon="system" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="4" width="19" height="13" rx="2.5"></rect>
+            <path d="M8 21h8M12 17.5V21"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="light" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="dark" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+          </svg>
+          <span class="theme-label">System</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero">
+        <h1 data-i18n="hero.title">UNNC Pseudocode Debugger</h1>
+        <p class="lead" data-i18n="hero.lead">
+          Write, compile and debug UNNC pseudocode in your browser.
+        </p>
+
+        <div class="actions">
+          <a class="btn btn-primary" href="https://labit.pythonanywhere.com/edit">
+            <span data-i18n="hero.cta">Start debugging</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </a>
+
+          <a class="btn btn-ghost" href="https://github.com/calcury/pseudo-code-compilation"
+             target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48
+                       0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47
+                       -.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83
+                       .09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68
+                       -.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0
+                       c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68
+                       0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75
+                       0 .27.18.58.69.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"></path>
+            </svg>
+            <span data-i18n="hero.github">GitHub source</span>
+          </a>
         </div>
+      </section>
 
-        <!-- 核心内容区 -->
-        <div class="main-content">
-            <!-- 操作按钮区 -->
-            <div class="action-section">
-                <p>点击按钮即可进入调试界面</p>
-                <a href="#editor" class="btn btn-enter">
-                    <i class="fas fa-rocket"></i>
-                    开始调试
-                </a>
-                <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank" class="btn btn-github">
-                    <i class="fab fa-github"></i>
-                    查看GitHub源码
-                </a>
-            </div>
+      <!-- 功能卡片 -->
+      <section class="features" aria-label="Features">
+        <article class="card">
+          <svg class="card-icon" viewBox="0 0 24 24" width="22" height="22" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 7 4 12 9 17"></polyline>
+            <polyline points="15 7 20 12 15 17"></polyline>
+          </svg>
+          <h2 data-i18n="feature.syntax.title">Syntax coverage</h2>
+          <p data-i18n="feature.syntax.desc">
+            Covers UNNC pseudocode: conditionals, function calls and more.
+          </p>
+        </article>
 
-            <!-- 功能介绍卡片 -->
-            <div class="intro-section">
-                <div class="intro-card">
-                    <i class="fas fa-code"></i>
-                    <h3>语法兼容</h3>
-                    <p>适配UCCN伪代码规范，支持条件判断、函数调用等核心语法</p>
-                </div>
-                <div class="intro-card">
-                    <i class="fas fa-play-circle"></i>
-                    <h3>在线调试</h3>
-                    <p>实时编译运行，直观展示执行步骤和结果，定位逻辑错误</p>
-                </div>
-            </div>
-        </div>
+        <article class="card">
+          <svg class="card-icon" viewBox="0 0 24 24" width="22" height="22" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M10.2 8.4l6 3.6-6 3.6z"></path>
+          </svg>
+          <h2 data-i18n="feature.runtime.title">Live debugging</h2>
+          <p data-i18n="feature.runtime.desc">
+            Runs in real time and shows each step to spot errors fast.
+          </p>
+        </article>
+      </section>
+    </main>
 
-        <!-- 页脚 -->
-        <div class="footer">
-            <p>© 2025 <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank">GitHub开源</a> | 欢迎 Fork & Star</p>
-            <p><a href="https://labit.pythonanywhere.com/contact" target="_blank">联系我们 | Contact</a></p>
-        </div>
-    </div>
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>
+        <span data-i18n="footer.copy">© 2025 UNNC ·</span>
+        <a href="https://github.com/calcury/pseudo-code-compilation"
+           target="_blank" rel="noopener noreferrer">
+          <span data-i18n="footer.link">Open source on GitHub</span>
+        </a>
+        <span data-i18n="footer.tail">· Fork &amp; Star welcome</span>
+      </p>
+      <p>
+        <a href="/contact">
+          <span data-i18n="footer.contact">Contact</span>
+        </a>
+      </p>
+    </footer>
+  </div>
 
-    <script>
-        // 跳转逻辑
-        document.querySelector('.btn-enter').addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = "https://labit.pythonanywhere.com/edit";
-        });
-    </script>
+<script>
+  (function () {
+    var root     = document.documentElement;
+    var themeBtn = document.getElementById('themeToggle');
+    var themeLbl = themeBtn.querySelector('.theme-label');
+    var langBtn  = document.getElementById('langToggle');
+    var langLbl  = langBtn.querySelector('.lang-label');
+    var metaDesc = document.querySelector('meta[name="description"]');
+
+    var THEME_ORDER = ['system', 'light', 'dark'];
+    var THEME_KEY   = { system: 'theme.system', light: 'theme.light', dark: 'theme.dark' };
+
+    var STRINGS = {
+      en: {
+        'meta.title': 'UNNC Pseudocode Debugger',
+        'meta.description': 'Write, compile and debug UNNC pseudocode in your browser',
+        'brand': 'UNNC',
+        'nav.contact': 'Contact',
+        'hero.title': 'UNNC Pseudocode Debugger',
+        'hero.lead': 'Write, compile and debug UNNC pseudocode in your browser',
+        'hero.cta': 'Start debugging',
+        'hero.github': 'GitHub source',
+        'feature.syntax.title': 'Syntax coverage',
+        'feature.syntax.desc': 'Covers UNNC pseudocode: conditionals, function calls and more',
+        'feature.runtime.title': 'Live debugging',
+        'feature.runtime.desc': 'Runs in real time and shows each step to spot errors fast',
+        'footer.copy': '© 2025 UNNC ·',
+        'footer.link': 'Open source on GitHub',
+        'footer.tail': '· Fork & Star welcome',
+        'footer.contact': 'Contact',
+        'theme.system': 'System',
+        'theme.light': 'Light',
+        'theme.dark': 'Dark',
+        'theme.aria': 'Current theme: {x}. Click to switch.',
+        'lang.aria': 'Switch to Chinese',
+        'lang.label': '中文'
+      },
+      zh: {
+        'meta.title': 'UNNC 伪代码调试工具',
+        'meta.description': '在浏览器中编写、编译和调试 UNNC 伪代码',
+        'brand': 'UNNC',
+        'nav.contact': '联系我们',
+        'hero.title': 'UNNC 伪代码调试工具',
+        'hero.lead': '在浏览器中编写、编译和调试 UNNC 伪代码',
+        'hero.cta': '开始调试',
+        'hero.github': 'GitHub 源码',
+        'feature.syntax.title': '语法兼容',
+        'feature.syntax.desc': '覆盖 UNNC 伪代码规范：条件判断、函数调用等核心语法',
+        'feature.runtime.title': '在线调试',
+        'feature.runtime.desc': '实时运行并展示执行步骤，快速发现逻辑错误',
+        'footer.copy': '© 2025 UNNC ·',
+        'footer.link': 'GitHub 开源',
+        'footer.tail': '· 欢迎 Fork & Star',
+        'footer.contact': '联系我们',
+        'theme.system': '跟随系统',
+        'theme.light': '浅色',
+        'theme.dark': '深色',
+        'theme.aria': '当前主题：{x}，点击切换',
+        'lang.aria': '切换到英文',
+        'lang.label': 'EN'
+      }
+    };
+
+    var state = {
+      theme: readTheme(),
+      lang: readLang()
+    };
+
+    /* ---------- 读取持久化偏好 ---------- */
+    function readTheme() {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') return t;
+      } catch (e) {}
+      return 'system';
+    }
+
+    function readLang() {
+      try {
+        var l = localStorage.getItem('lang');
+        if (l === 'zh' || l === 'en') return l;
+      } catch (e) {}
+      return 'en'; // 默认英文
+    }
+
+    /* ---------- 应用主题 ---------- */
+    function applyTheme() {
+      if (state.theme === 'system') {
+        root.removeAttribute('data-theme');
+      } else {
+        root.setAttribute('data-theme', state.theme);
+      }
+    }
+
+    function renderTheme() {
+      var s = STRINGS[state.lang];
+      var name = s[THEME_KEY[state.theme]];
+      themeBtn.dataset.mode = state.theme;
+      themeLbl.textContent = name;
+      themeBtn.setAttribute('aria-label', s['theme.aria'].replace('{x}', name));
+    }
+
+    /* ---------- 应用语言 ---------- */
+    function renderLang() {
+      var s = STRINGS[state.lang];
+
+      root.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+      document.title = s['meta.title'];
+      if (metaDesc) metaDesc.setAttribute('content', s['meta.description']);
+
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for (var i = 0; i < nodes.length; i++) {
+        var key = nodes[i].getAttribute('data-i18n');
+        if (s[key] != null) nodes[i].textContent = s[key];
+      }
+
+      langLbl.textContent = s['lang.label'];
+      langBtn.setAttribute('aria-label', s['lang.aria']);
+      langBtn.setAttribute('title', s['lang.aria']);
+
+      renderTheme();
+    }
+
+    /* ---------- 事件 ---------- */
+    themeBtn.addEventListener('click', function () {
+      var idx = THEME_ORDER.indexOf(state.theme);
+      state.theme = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      applyTheme();
+      try { localStorage.setItem('theme', state.theme); } catch (e) {}
+      renderTheme();
+    });
+
+    langBtn.addEventListener('click', function () {
+      state.lang = state.lang === 'en' ? 'zh' : 'en';
+      try { localStorage.setItem('lang', state.lang); } catch (e) {}
+      renderLang();
+    });
+
+    /* ---------- 初始化 ---------- */
+    applyTheme();
+    renderLang();
+  })();
+</script>
 </body>
 </html>
