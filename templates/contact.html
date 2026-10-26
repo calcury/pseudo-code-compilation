@@ -1,364 +1,661 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>联系我们 - UCCN伪代码在线调试助手</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="description" content="联系UCCN伪代码调试助手开发团队，获取技术支持与反馈">
-    
-    <!-- Open Graph协议 - 用于QQ/微信分享 -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://labit.pythonanywhere.com/contact">
-    <meta property="og:title" content="联系我们 - UCCN伪代码在线调试助手">
-    <meta property="og:description" content="联系UCCN伪代码调试助手开发团队，获取技术支持与反馈">
-    <meta property="og:image" content="https://labit.pythonanywhere.com/static/img/pseudocode.png">
-    <meta property="og:site_name" content="UCCN编程工具">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — UNNC Pseudocode Debugger</title>
+<meta name="description" content="Get in touch with the UNNC pseudocode debugger team.">
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://labit.pythonanywhere.com/contact">
+<meta property="og:title" content="Contact — UNNC Pseudocode Debugger">
+<meta property="og:description" content="Get in touch with the UNNC pseudocode debugger team.">
+<meta property="og:image" content="https://labit.pythonanywhere.com/static/img/pseudocode.png">
+<meta property="og:site_name" content="UNNC">
 
-        .container {
-            max-width: 1100px;
-            width: 95%;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            overflow: hidden;
-        }
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0c0e">
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 35px 25px;
-            text-align: center;
-        }
+<!-- 首屏前置：主题 & 语言 -->
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      var l = localStorage.getItem('lang');
+      if (l === 'zh') {
+        document.documentElement.lang = 'zh-CN';
+        document.title = '联系我们 — UNNC 伪代码调试工具';
+      }
+    } catch (e) {}
+  })();
+</script>
 
-        .header h1 {
-            font-size: 2.8em;
-            margin-bottom: 12px;
-            font-weight: 400;
-        }
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #f7f8f9;
+    --surface-hover: #f0f1f3;
+    --border: #e6e7ea;
+    --text: #111214;
+    --muted: #6b7280;
+    --btn-bg: #111214;
+    --btn-text: #ffffff;
+    --btn-hover: #2a2d33;
+    --ring: #2563eb;
+  }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.2em;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0b0c0e;
+      --surface: #14161a;
+      --surface-hover: #1b1e23;
+      --border: #24272d;
+      --text: #f2f3f5;
+      --muted: #9aa1ab;
+      --btn-bg: #f2f3f5;
+      --btn-text: #0b0c0e;
+      --btn-hover: #ffffff;
+      --ring: #6ea8ff;
+    }
+  }
 
-        /* 核心内容区 */
-        .main-content {
-            padding: 30px 25px 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b0c0e;
+    --surface: #14161a;
+    --surface-hover: #1b1e23;
+    --border: #24272d;
+    --text: #f2f3f5;
+    --muted: #9aa1ab;
+    --btn-bg: #f2f3f5;
+    --btn-text: #0b0c0e;
+    --btn-hover: #ffffff;
+    --ring: #6ea8ff;
+  }
 
-        /* 联系信息区 */
-        .contact-info {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
-        }
+  * { box-sizing: border-box; }
 
-        .contact-info h2 {
-            color: #2c3e50;
-            font-size: 1.8em;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #3498db;
-            font-weight: 600;
-        }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
 
-        .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                 "Helvetica Neue", "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color .25s ease, color .25s ease;
+  }
 
-        .contact-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
-        }
+  a { color: inherit; }
 
-        .contact-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            color: white;
-            font-size: 1.5em;
-        }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
 
-        .contact-details h3 {
-            color: #2c3e50;
-            font-size: 1.3em;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 44px) clamp(18px, 5vw, 44px) 40px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-        .contact-details p {
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
+  main { flex: 1 0 auto; }
 
-        .contact-link {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: clamp(24px, 4vw, 40px);
+  }
 
-        .contact-link:hover {
-            color: #2c3e50;
-            text-decoration: underline;
-        }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-decoration: none;
+    color: var(--text);
+  }
 
-        /* 联系表单区 */
-        .contact-form {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
-        }
+  .brand-mark {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--text);
+  }
 
-        .contact-form h2 {
-            color: #2c3e50;
-            font-size: 1.8em;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #3498db;
-            font-weight: 600;
-        }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+  .ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
 
-        .form-group label {
-            display: block;
-            color: #2c3e50;
-            font-size: 1.1em;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+  .ctrl:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
 
-        .form-control {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1.1em;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
+  .theme-icon { display: none; width: 16px; height: 16px; }
 
-        .form-control:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-            outline: none;
-        }
+  .theme-toggle[data-mode="system"] .theme-icon[data-icon="system"],
+  .theme-toggle[data-mode="light"]  .theme-icon[data-icon="light"],
+  .theme-toggle[data-mode="dark"]   .theme-icon[data-icon="dark"] {
+    display: block;
+  }
 
-        textarea.form-control {
-            min-height: 150px;
-            resize: vertical;
-        }
+  /* ---------- Hero ---------- */
+  .hero { padding: 0 0 clamp(28px, 5vw, 44px); }
 
-        .btn {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            color: white;
-            border: none;
-            padding: 16px 35px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
+  .hero h1 {
+    margin: 0 0 12px;
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
+  .lead {
+    margin: 0;
+    max-width: 46em;
+    font-size: clamp(14px, 1.6vw, 16px);
+    color: var(--muted);
+  }
 
-        .btn-block {
-            display: block;
-            width: 100%;
-            justify-content: center;
-        }
+  /* ---------- 联系卡片 ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
 
-        /* 页脚 */
-        .footer {
-            background: #f8f9fa;
-            padding: 20px 25px;
-            border-top: 1px solid #e1e8ed;
-            text-align: center;
-        }
+  .card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    transition: border-color .2s ease, background-color .2s ease;
+  }
 
-        .footer p {
-            color: #666;
-            font-size: 1.05em;
-            line-height: 1.6;
-        }
+  .card:hover { border-color: var(--muted); }
 
-        .footer a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 500;
-        }
+  .card-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+  }
 
-        .footer a:hover {
-            text-decoration: underline;
-        }
+  .card-body { min-width: 0; }
 
-        /* 响应式适配 */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2.2em;
-            }
-            
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
+  .card-body h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
 
-            .contact-item {
-                flex-direction: column;
-                text-align: center;
-            }
+  .card-body p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
 
-            .contact-icon {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
+  .card-value {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 13px;
+    color: var(--text);
+  }
 
-            .btn {
-                width: 100%;
-                justify-content: center;
-                font-size: 17px;
-                padding: 15px 30px;
-            }
-        }
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    transition: border-color .2s ease;
+  }
 
-        @media (max-width: 500px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .header p {
-                font-size: 1.1em;
-            }
-            
-            .contact-info, .contact-form {
-                padding: 20px;
-            }
-        }
-    </style>
+  .card-link:hover { border-bottom-color: currentColor; }
+
+  .card-link svg { flex: none; color: var(--muted); }
+
+  /* ---------- 页脚 ---------- */
+  .footer {
+    flex: none;
+    margin-top: clamp(36px, 6vw, 60px);
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .footer p { margin: 0; }
+
+  .footer a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: border-color .2s ease;
+  }
+
+  .footer a:hover { border-bottom-color: currentColor; }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 560px) {
+    .card {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .card-body h2 { margin-bottom: 4px; }
+
+    .footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .theme-label { display: none; }
+    .theme-toggle { padding: 0 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- 头部标题区 -->
-        <div class="header">
-            <h1>联系我们</h1>
-            <p>有任何问题或建议？我们很乐意听取您的反馈</p>
-        </div>
+  <div class="page">
 
-        <!-- 核心内容区 -->
-        <div class="main-content">
-            <!-- 联系信息区 -->
-            <div class="contact-info">
-                <h2>联系方式</h2>
-                
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div class="contact-details">
-                        <h3>个人联系</h3>
-                        <p>==邮箱==</p>
-                        <p><a href="mailto:your-email@example.com" class="contact-link">18106595178@163.com</a></p>
-                        <p>==微信==</p>
-                        <p><a class="contact-link">18106595178</a></p>
-                    </div>
-                </div>
-                
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fab fa-github"></i>
-                    </div>
-                    <div class="contact-details">
-                        <h3>GitHub项目</h3>
-                        <p>访问项目仓库: <a href="https://github.com/calcury/pseudo-code-compilation" target="_blank" class="contact-link">pseudo-code-compilation</a></p>
-                        <p>提交Issue或参与开发</p>
-                    </div>
-                </div>
-                
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-code-branch"></i>
-                    </div>
-                    <div class="contact-details">
-                        <h3>技术交流</h3>
-                        <p>欢迎 Fork & Pull</p>
-                        <p>共同完善UCCN伪代码调试工具</p>
-                    </div>
-                </div>
-                
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-bug"></i>
-                    </div>
-                    <div class="contact-details">
-                        <h3>问题反馈</h3>
-                        <p>发现Bug或有功能建议？</p>
-                        <p>请通过GitHub Issues或邮件联系我们</p>
-                    </div>
-                </div>
-            </div>
+    <header class="topbar">
+      <a class="brand" href="/index">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>UNNC Pseudocode Debugger</span>
+      </a>
 
-        <!-- 页脚 -->
-        <div class="footer">
-            <p><a href="https://github.com/calcury/pseudo-code-compilation" target="_blank">GitHub开源</a> | 欢迎 Fork & Star</p>
-            <p><a href="https://labit.pythonanywhere.com/index" target="_blank">返回首页</a></p>
-        </div>
-    </div>
+      <div class="controls">
+        <button id="langToggle" class="ctrl lang-toggle" type="button" aria-label="Switch to Chinese">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18"></path>
+            <path d="M12 3c2.4 2.6 2.4 15.4 0 18"></path>
+            <path d="M12 3c-2.4 2.6-2.4 15.4 0 18"></path>
+          </svg>
+          <span class="lang-label">中文</span>
+        </button>
 
-    <script>
-        // 返回首页链接
-        document.querySelector('.footer a[href*="index"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = "https://labit.pythonanywhere.com/index";
-        });
-    </script>
+        <button id="themeToggle" class="ctrl theme-toggle" type="button" data-mode="system"
+                aria-label="Current theme: System. Click to switch.">
+          <svg class="theme-icon" data-icon="system" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="4" width="19" height="13" rx="2.5"></rect>
+            <path d="M8 21h8M12 17.5V21"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="light" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="dark" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+          </svg>
+          <span class="theme-label">System</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1 data-i18n="hero.title">Contact</h1>
+        <p class="lead" data-i18n="hero.lead">
+          Questions, ideas or feedback? We'd love to hear from you.
+        </p>
+      </section>
+
+      <section class="cards" aria-label="Contact channels">
+
+        <!-- 微信 -->
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="4.5" width="19" height="13" rx="2.5"></rect>
+              <path d="M3 7.5l9 6 9-6"></path>
+            </svg>
+          </span>
+          <div class="card-body">
+            <h2 data-i18n="contact.wechat.title">Personal contact</h2>
+            <p data-i18n="contact.wechat.desc">WeChat</p>
+            <span class="card-value">calcury</span>
+          </div>
+        </article>
+
+        <!-- GitHub -->
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48
+                       0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47
+                       -.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83
+                       .09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68
+                       -.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0
+                       c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68
+                       0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75
+                       0 .27.18.58.69.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"></path>
+            </svg>
+          </span>
+          <div class="card-body">
+            <h2 data-i18n="contact.github.title">GitHub project</h2>
+            <p data-i18n="contact.github.desc">Browse the repository, open issues or contribute.</p>
+            <a class="card-link"
+               href="https://github.com/calcury/pseudo-code-compilation"
+               target="_blank" rel="noopener noreferrer">
+              <span>pseudo-code-compilation</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 17L17 7M9 7h8v8"></path>
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- 技术交流 -->
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="6" r="2.5"></circle>
+              <circle cx="18" cy="6" r="2.5"></circle>
+              <circle cx="12" cy="18" r="2.5"></circle>
+              <path d="M6 8.5v2a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-2"></path>
+            </svg>
+          </span>
+          <div class="card-body">
+            <h2 data-i18n="contact.collab.title">Technical collaboration</h2>
+            <p data-i18n="contact.collab.desc">
+              Fork, pull request and help improve the UNNC pseudocode debugger together.
+            </p>
+          </div>
+        </article>
+
+        <!-- 问题反馈 -->
+        <article class="card">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7" y="7" width="10" height="12" rx="5"></rect>
+              <path d="M9 3.5l1.5 2M15 3.5l-1.5 2M7 12H4M20 12h-3M7 16H4.5M19.5 16H17"></path>
+            </svg>
+          </span>
+          <div class="card-body">
+            <h2 data-i18n="contact.bug.title">Bug reports</h2>
+            <p data-i18n="contact.bug.desc">
+              Found a bug or have a feature request? Reach us via GitHub Issues or email.
+            </p>
+          </div>
+        </article>
+
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        <span data-i18n="footer.copy">© 2025 UNNC ·</span>
+        <a href="https://github.com/calcury/pseudo-code-compilation"
+           target="_blank" rel="noopener noreferrer">
+          <span data-i18n="footer.link">Open source on GitHub</span>
+        </a>
+        <span data-i18n="footer.tail">· Fork &amp; Star welcome</span>
+      </p>
+      <p>
+        <a href="/index">
+          <span data-i18n="footer.home">Back to home</span>
+        </a>
+      </p>
+    </footer>
+  </div>
+
+<script>
+  (function () {
+    var root     = document.documentElement;
+    var themeBtn = document.getElementById('themeToggle');
+    var themeLbl = themeBtn.querySelector('.theme-label');
+    var langBtn  = document.getElementById('langToggle');
+    var langLbl  = langBtn.querySelector('.lang-label');
+    var metaDesc = document.querySelector('meta[name="description"]');
+
+    var THEME_ORDER = ['system', 'light', 'dark'];
+    var THEME_KEY   = { system: 'theme.system', light: 'theme.light', dark: 'theme.dark' };
+
+    var STRINGS = {
+      en: {
+        'meta.title': 'Contact — UNNC Pseudocode Debugger',
+        'meta.description': 'Get in touch with the UNNC pseudocode debugger team.',
+
+        'hero.title': 'Contact',
+        'hero.lead': "Questions, ideas or feedback? We'd love to hear from you.",
+
+        'contact.wechat.title': 'Personal contact',
+        'contact.wechat.desc': 'WeChat',
+
+        'contact.github.title': 'GitHub project',
+        'contact.github.desc': 'Browse the repository, open issues or contribute.',
+
+        'contact.collab.title': 'Technical collaboration',
+        'contact.collab.desc': 'Fork, pull request and help improve the UNNC pseudocode debugger together.',
+
+        'contact.bug.title': 'Bug reports',
+        'contact.bug.desc': 'Found a bug or have a feature request? Reach us via GitHub Issues or email.',
+
+        'footer.copy': '© 2025 UNNC ·',
+        'footer.link': 'Open source on GitHub',
+        'footer.tail': '· Fork & Star welcome',
+        'footer.home': 'Back to home',
+
+        'theme.system': 'System',
+        'theme.light': 'Light',
+        'theme.dark': 'Dark',
+        'theme.aria': 'Current theme: {x}. Click to switch.',
+
+        'lang.label': '中文',
+        'lang.aria': 'Switch to Chinese'
+      },
+      zh: {
+        'meta.title': '联系我们 — UNNC 伪代码调试工具',
+        'meta.description': '联系 UNNC 伪代码调试工具开发团队，获取支持与反馈。',
+
+        'hero.title': '联系我们',
+        'hero.lead': '有任何问题、建议或想法？欢迎随时联系我们。',
+
+        'contact.wechat.title': '个人联系',
+        'contact.wechat.desc': '微信',
+
+        'contact.github.title': 'GitHub 项目',
+        'contact.github.desc': '访问项目仓库，提交 Issue 或参与贡献。',
+
+        'contact.collab.title': '技术交流',
+        'contact.collab.desc': '欢迎 Fork & Pull，一起完善 UNNC 伪代码调试工具。',
+
+        'contact.bug.title': '问题反馈',
+        'contact.bug.desc': '发现 Bug 或有功能建议？请通过 GitHub Issues 或邮件联系我们。',
+
+        'footer.copy': '© 2025 UNNC ·',
+        'footer.link': 'GitHub 开源',
+        'footer.tail': '· 欢迎 Fork & Star',
+        'footer.home': '返回首页',
+
+        'theme.system': '跟随系统',
+        'theme.light': '浅色',
+        'theme.dark': '深色',
+        'theme.aria': '当前主题：{x}，点击切换',
+
+        'lang.label': 'EN',
+        'lang.aria': '切换到英文'
+      }
+    };
+
+    var state = {
+      theme: readTheme(),
+      lang: readLang()
+    };
+
+    function readTheme() {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') return t;
+      } catch (e) {}
+      return 'system';
+    }
+
+    function readLang() {
+      try {
+        var l = localStorage.getItem('lang');
+        if (l === 'zh' || l === 'en') return l;
+      } catch (e) {}
+      return 'en';
+    }
+
+    function applyTheme() {
+      if (state.theme === 'system') {
+        root.removeAttribute('data-theme');
+      } else {
+        root.setAttribute('data-theme', state.theme);
+      }
+    }
+
+    function renderTheme() {
+      var s = STRINGS[state.lang];
+      var name = s[THEME_KEY[state.theme]];
+      themeBtn.dataset.mode = state.theme;
+      themeLbl.textContent = name;
+      themeBtn.setAttribute('aria-label', s['theme.aria'].replace('{x}', name));
+    }
+
+    function renderLang() {
+      var s = STRINGS[state.lang];
+
+      root.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+      document.title = s['meta.title'];
+      if (metaDesc) metaDesc.setAttribute('content', s['meta.description']);
+
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for (var i = 0; i < nodes.length; i++) {
+        var key = nodes[i].getAttribute('data-i18n');
+        if (s[key] != null) nodes[i].textContent = s[key];
+      }
+
+      langLbl.textContent = s['lang.label'];
+      langBtn.setAttribute('aria-label', s['lang.aria']);
+      langBtn.setAttribute('title', s['lang.aria']);
+
+      renderTheme();
+    }
+
+    themeBtn.addEventListener('click', function () {
+      var idx = THEME_ORDER.indexOf(state.theme);
+      state.theme = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      applyTheme();
+      try { localStorage.setItem('theme', state.theme); } catch (e) {}
+      renderTheme();
+    });
+
+    langBtn.addEventListener('click', function () {
+      state.lang = state.lang === 'en' ? 'zh' : 'en';
+      try { localStorage.setItem('lang', state.lang); } catch (e) {}
+      renderLang();
+    });
+
+    applyTheme();
+    renderLang();
+  })();
+</script>
 </body>
 </html>
