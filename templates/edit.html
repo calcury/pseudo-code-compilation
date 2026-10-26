@@ -1,399 +1,1463 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>伪代码在线测试</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://labit.pythonanywhere.com/static/css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNNC Pseudocode Debugger</title>
+<meta name="description" content="A lightweight UNNC pseudocode debugging tool: syntax validation, live execution and clear output.">
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0c0e">
+
+<!-- 首屏前置：主题 & 语言 -->
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      var l = localStorage.getItem('lang');
+      if (l === 'zh') {
+        document.documentElement.lang = 'zh-CN';
+        document.title = 'UNNC 伪代码调试工具';
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #f7f8f9;
+    --surface-hover: #f0f1f3;
+    --border: #e6e7ea;
+    --text: #111214;
+    --muted: #6b7280;
+    --btn-bg: #111214;
+    --btn-text: #ffffff;
+    --btn-hover: #2a2d33;
+    --ring: #2563eb;
+    --ok: #0f7a56;
+    --err: #c0362c;
+    --info: #6b7280;
+    --overlay: rgba(17, 18, 20, .45);
+    --shadow: 0 24px 60px rgba(0, 0, 0, .22);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0b0c0e;
+      --surface: #14161a;
+      --surface-hover: #1b1e23;
+      --border: #24272d;
+      --text: #f2f3f5;
+      --muted: #9aa1ab;
+      --btn-bg: #f2f3f5;
+      --btn-text: #0b0c0e;
+      --btn-hover: #ffffff;
+      --ring: #6ea8ff;
+      --ok: #4ade80;
+      --err: #ff8a80;
+      --info: #9aa1ab;
+      --overlay: rgba(0, 0, 0, .6);
+      --shadow: 0 24px 60px rgba(0, 0, 0, .5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b0c0e;
+    --surface: #14161a;
+    --surface-hover: #1b1e23;
+    --border: #24272d;
+    --text: #f2f3f5;
+    --muted: #9aa1ab;
+    --btn-bg: #f2f3f5;
+    --btn-text: #0b0c0e;
+    --btn-hover: #ffffff;
+    --ring: #6ea8ff;
+    --ok: #4ade80;
+    --err: #ff8a80;
+    --info: #9aa1ab;
+    --overlay: rgba(0, 0, 0, .6);
+    --shadow: 0 24px 60px rgba(0, 0, 0, .5);
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                 "Helvetica Neue", "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color .25s ease, color .25s ease;
+  }
+
+  a { color: inherit; }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: clamp(16px, 2.5vw, 28px) clamp(16px, 2.5vw, 28px) 28px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  main {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: clamp(16px, 3vw, 28px);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .brand-mark {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--text);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
+
+  .ctrl:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .theme-icon { display: none; width: 16px; height: 16px; }
+
+  .theme-toggle[data-mode="system"] .theme-icon[data-icon="system"],
+  .theme-toggle[data-mode="light"]  .theme-icon[data-icon="light"],
+  .theme-toggle[data-mode="dark"]   .theme-icon[data-icon="dark"] {
+    display: block;
+  }
+
+  .hero { padding: 0 0 clamp(16px, 2.5vw, 24px); }
+
+  .hero h1 {
+    margin: 0 0 8px;
+    font-size: clamp(24px, 3vw, 34px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .lead {
+    margin: 0;
+    max-width: 46em;
+    font-size: clamp(13px, 1.3vw, 15px);
+    color: var(--muted);
+  }
+
+  /* ========== 工作区：桌面端左右分栏 ========== */
+  .workspace {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg);
+    overflow: hidden;
+    transition: border-color .2s ease;
+  }
+
+  .panel:focus-within { border-color: var(--muted); }
+
+  .panel-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .panel-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .panel-title svg { color: var(--muted); }
+
+  .panel-foot {
+    flex: none;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .hint {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease,
+                border-color .2s ease, transform .12s ease, opacity .2s ease;
+  }
+
+  .btn svg { flex: none; }
+  .btn:active { transform: translateY(1px); }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+    transform: none;
+  }
+
+  .btn-primary {
+    background: var(--btn-bg);
+    color: var(--btn-text);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--btn-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-hover); }
+
+  .btn-sm {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  /* ========== 编辑器 ========== */
+  .code-editor {
+    flex: 1 1 auto;
+    display: block;
+    width: 100%;
+    min-height: 280px;
+    padding: 16px;
+    border: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    tab-size: 4;
+    resize: none;
+  }
+
+  .code-editor:focus,
+  .code-editor:focus-visible { outline: none; }
+
+  .code-editor::placeholder,
+  .call-input::placeholder { color: var(--muted); opacity: 1; }
+
+  /* ========== 输出面板内置工具栏 ========== */
+  .output-toolbar {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .call-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  .call-label {
+    flex: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .call-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 13px;
+    transition: border-color .2s ease;
+  }
+
+  .call-input:focus {
+    outline: none;
+    border-color: var(--muted);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  .btn-row .btn {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  /* ========== 输出正文 ========== */
+  .output-body {
+    flex: 1 1 auto;
+    min-height: 160px;
+    padding: 16px;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .info { color: var(--info); }
+  .ok   { color: var(--ok); }
+  .err  { color: var(--err); }
+
+  /* ========== 弹窗 ========== */
+  .modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--overlay);
+    z-index: 100;
+  }
+
+  .modal.open { display: flex; }
+
+  .modal-card {
+    display: flex;
+    flex-direction: column;
+    width: min(760px, 100%);
+    max-height: min(82vh, 760px);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 12px 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .modal-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .modal-title svg { color: var(--muted); }
+
+  .modal-body {
+    flex: 1 1 auto;
+    padding: 18px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .code-pre {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 13.5px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+  }
+
+  .code-pre.has-error { color: var(--err); }
+
+  .sample-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sample-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+
+  .sample-item:hover {
+    background: var(--surface-hover);
+    border-color: var(--muted);
+  }
+
+  .sample-item h4 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .sample-item p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .sample-desc {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    opacity: .85;
+  }
+
+  .toast {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    z-index: 300;
+    max-width: calc(100vw - 40px);
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .22);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .footer {
+    flex: none;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .footer p { margin: 0; }
+
+  .footer a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: border-color .2s ease;
+  }
+
+  .footer a:hover { border-bottom-color: currentColor; }
+
+  /* ========== 桌面端：锁定工作区高度，面板内部滚动 ========== */
+  @media (min-width: 901px) {
+    .workspace {
+      height: clamp(420px, calc(100vh - 260px), 820px);
+      min-height: 0;
+    }
+
+    .code-editor {
+      flex: 1 1 auto;
+      min-height: 0;   /* 覆盖全局 min-height: 280px，避免撑破面板 */
+      overflow: auto;
+    }
+
+    .output-body {
+      flex: 1 1 auto;
+      min-height: 0;   /* 覆盖全局 min-height: 160px */
+      overflow: auto;
+    }
+  }
+
+  /* ========== 移动端：恢复纵向堆叠 ========== */
+  @media (max-width: 900px) {
+    .workspace {
+      grid-template-columns: 1fr;
+      flex: none;
+    }
+
+    .panel {
+      min-height: 0;
+    }
+
+    .code-editor {
+      flex: none;
+      min-height: 260px;
+    }
+
+    .output-body {
+      flex: none;
+      min-height: 180px;
+      max-height: 50vh;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .output-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .call-field {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+
+    .call-input { width: 100%; }
+
+    .btn-row { width: 100%; }
+    .btn-row .btn { flex: 1 1 0; }
+
+    .modal-body { padding: 14px; }
+    .modal-foot { padding: 12px 14px; }
+  }
+
+  @media (max-width: 400px) {
+    .theme-label { display: none; }
+    .theme-toggle { padding: 0 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-code"></i> UNNC 伪代码</h1>
-            <p>伪代码在线编译运行</p>
-        </div>
+  <div class="page">
 
-        <div class="editor-section">
-            <div class="editor-header">
-                <div class="editor-title">
-                    <i class="fas fa-edit"></i> 编辑器
-                </div>
-                <button class="btn btn-compile" onclick="compileCode()">
-                    <i class="fas fa-cogs"></i> 编译结果
-                </button>
-            </div>
-            <textarea class="code-editor" id="pseudoCode" placeholder="输入伪代码" spellcheck="false"></textarea>
-        </div>
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>UNNC Pseudocode Debugger</span>
+      </a>
 
-        <div class="control-section">
-            <div class="function-call-group">
-                <span class="function-call-label">执行的函数：</span>
-                <input type="text" class="function-call-input" id="functionCall" value="" placeholder="输入调用的函数" spellcheck="false">
-            </div>
-            <div class="button-group">
-                <button class="btn btn-run" onclick="runCode()">
-                    <i class="fas fa-play"></i> 运行
-                </button>
-                <button class="btn btn-sample" onclick="openSampleModal()">
-                    <i class="fas fa-book"></i> 样例
-                </button>
-            </div>
-        </div>
+      <div class="controls">
+        <button id="langToggle" class="ctrl lang-toggle" type="button" aria-label="Switch to Chinese">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18"></path>
+            <path d="M12 3c2.4 2.6 2.4 15.4 0 18"></path>
+            <path d="M12 3c-2.4 2.6-2.4 15.4 0 18"></path>
+          </svg>
+          <span class="lang-label">中文</span>
+        </button>
 
-        <div class="output-section">
-            <div class="output-header">
-                <div class="output-title">
-                    <i class="fas fa-terminal"></i> 运行结果 
-                </div>
+        <button id="themeToggle" class="ctrl theme-toggle" type="button" data-mode="system"
+                aria-label="Current theme: System. Click to switch.">
+          <svg class="theme-icon" data-icon="system" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="4" width="19" height="13" rx="2.5"></rect>
+            <path d="M8 21h8M12 17.5V21"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="light" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="theme-icon" data-icon="dark" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+          </svg>
+          <span class="theme-label">System</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1 data-i18n="hero.title">UNNC Pseudocode Debugger</h1>
+        <p class="lead" data-i18n="hero.lead">
+          Write, compile and debug UNNC pseudocode in the browser — syntax validation, live execution and clear output.
+        </p>
+      </section>
+
+      <div class="workspace">
+
+        <!-- 左：编辑器 -->
+        <section class="panel editor-panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                   stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 7 4 12 9 17"></polyline>
+                <polyline points="15 7 20 12 15 17"></polyline>
+              </svg>
+              <span data-i18n="editor.title">Editor</span>
             </div>
-            <div class="output-content" id="output">
-                <span class="info">运行结果...</span>
+
+            <button class="btn btn-ghost btn-sm" type="button" onclick="compileCode()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
+                   stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
+              </svg>
+              <span data-i18n="editor.compile">Compiled output</span>
+            </button>
+          </div>
+
+          <textarea id="pseudoCode" class="code-editor" spellcheck="false"
+                    data-i18n-placeholder="editor.placeholder"
+                    placeholder="Write your pseudocode here..."></textarea>
+        </section>
+
+        <!-- 右：输出（含内置工具栏） -->
+        <section class="panel output-panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                   stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2.5" y="4" width="19" height="16" rx="2.5"></rect>
+                <path d="M6.5 9l3 3-3 3M12 15h5"></path>
+              </svg>
+              <span data-i18n="output.title">Output</span>
             </div>
-            <span class="error">Tips: 若无法解决报错请检查代码规范或者联系开发者</span>
+          </div>
+
+          <!-- 控件：函数调用 / 运行 / 样例 -->
+          <div class="output-toolbar">
+            <div class="call-field">
+              <label class="call-label" for="functionCall" data-i18n="call.label">Function call:</label>
+              <input id="functionCall" class="call-input" type="text" spellcheck="false"
+                     data-i18n-placeholder="call.placeholder"
+                     placeholder="e.g. factorial(5)">
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-primary run-btn" type="button" onclick="runCode()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5.5v13l11-6.5z"></path>
+                </svg>
+                <span class="run-label" data-i18n="action.run">Run</span>
+              </button>
+
+              <button class="btn btn-ghost" type="button" onclick="openSampleModal()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                     stroke="currentColor" stroke-width="1.7"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+                  <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5z"></path>
+                </svg>
+                <span data-i18n="action.samples">Samples</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="output-body" id="output" role="status" aria-live="polite">
+            <span class="info" data-i18n="output.placeholder">Results will appear here...</span>
+          </div>
+
+          <div class="panel-foot">
+            <span class="hint" data-i18n="output.tips">
+              Tip: if an error persists, check that your code follows the UNNC pseudocode convention, or contact the developer.
+            </span>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>
+        <span data-i18n="footer.copy">© 2025 UNNC ·</span>
+        <a href="https://github.com/calcury/pseudo-code-compilation"
+           target="_blank" rel="noopener noreferrer">
+          <span data-i18n="footer.link">Open source on GitHub</span>
+        </a>
+        <span data-i18n="footer.tail">· Fork &amp; Star welcome</span>
+      </p>
+    </footer>
+  </div>
+
+  <!-- 编译结果弹窗 -->
+  <div id="compileModal" class="modal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="compileTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="compileTitle">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 7 4 12 9 17"></polyline>
+            <polyline points="15 7 20 12 15 17"></polyline>
+          </svg>
+          <span data-i18n="modal.compile">Compiled output</span>
         </div>
+        <button class="icon-btn" type="button" onclick="closeModal()"
+                data-i18n-aria="action.close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <pre class="code-pre" id="pythonCode" data-i18n="modal.compilePlaceholder">Compiled code will appear here...</pre>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="closeModal()">
+          <span data-i18n="action.close">Close</span>
+        </button>
+        <button class="btn btn-primary btn-sm" type="button" onclick="copyPythonCode()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="12" height="12" rx="2.5"></rect>
+            <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span data-i18n="action.copy">Copy</span>
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- 编译结果弹窗 -->
-    <div id="compileModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-code"></i> 编译结果
-                </div>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <pre class="python-code" id="pythonCode">编译后的代码将显示在这里...</pre>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-copy" onclick="copyPythonCode()">
-                    <i class="fas fa-copy"></i> 复制
-                </button>
-                <button class="btn" onclick="closeModal()">
-                    <i class="fas fa-times"></i> 关闭
-                </button>
-            </div>
+  <!-- 样例弹窗 -->
+  <div id="sampleModal" class="modal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="sampleTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="sampleTitle">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+            <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5z"></path>
+          </svg>
+          <span data-i18n="modal.samples">Choose a sample</span>
         </div>
+        <button class="icon-btn" type="button" onclick="closeSampleModal()"
+                data-i18n-aria="action.close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="sample-list" id="sampleList"></div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="closeSampleModal()">
+          <span data-i18n="action.close">Close</span>
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- 样例弹窗 -->
-    <div id="sampleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-book"></i> 选择样例
-                </div>
-                <span class="close" onclick="closeSampleModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="sample-list" id="sampleList">
-                    <!-- 样例列表会通过JS生成 -->
-                </div>
-            </div>
-            <div class="action-buttons">
-                <button class="btn" onclick="closeSampleModal()">
-                    <i class="fas fa-times"></i> 关闭
-                </button>
-            </div>
-        </div>
-    </div>
+<script>
+  /* =========================================================
+     文案
+     ========================================================= */
+  var STRINGS = {
+    en: {
+      'meta.title': 'UNNC Pseudocode Debugger',
+      'meta.description': 'A lightweight UNNC pseudocode debugging tool',
 
-    <script>
-        // 样例数据
-        const sampleData = [
-            {
-                name: "阶乘计算 (factorial)",
-                description: "计算一个非负整数的阶乘",
-                code: `Algorithm: factorial(n)
-Requires: an integer n
-Returns: an integer
-if n == 0 then
-    return 1
-else
-    return n * factorial(n-1)
-endif`,
-                functionCall: "factorial(5)"
-            },
-            {
-                name: "斐波那契数列 (fibonacci)",
-                description: "计算斐波那契数列的第n项",
-                code: `Algorithm: fibonacci(n)
-Requires: an integer n
-Returns: an integer
-if n <= 1 then
-    return n
-else
-    return fibonacci(n-1) + fibonacci(n-2)
-endif`,
-                functionCall: "fibonacci(8)"
-            },
-            {
-                name: "列表求和 (sumlist)",
-                description: "计算列表元素和",
-                code: `Algorithm: sumlist(l)
-Requires: a list l
-Returns: an integer
-if isEmpty(l) then
-    return 0
-else
-    return value(l) + sumlist(tail(l))
-endif`,
-                functionCall: "sumlist([1,3,5,7])"
-            },
-            {
-                name: "二叉树的高度 (hight)",
-                description: "计算二叉树的高度",
-                code: `Algorithm: hight(t)
-Requires: a tree t
-Returns: an integer
-if isLeaf(t) then
-    return 0
-else
-    return 1 + max(hight(left(t)),hight(right(t)))
-endif`,
-                functionCall: "hight(node(node(leaf,1,leaf),2,node(node(leaf,3,leaf),4,node(leaf,5,leaf))))"
-            }
-        ];
+      'hero.title': 'UNNC Pseudocode Debugger',
+      'hero.lead': 'Write, compile and debug UNNC pseudocode in the browser',
 
-        // 页面加载时从localStorage恢复数据
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedCode = localStorage.getItem('pseudoCode');
-            const savedFunctionCall = localStorage.getItem('functionCall');
-            
-            if (savedCode) {
-                document.getElementById('pseudoCode').value = savedCode;
-            }
-            
-            if (savedFunctionCall) {
-                document.getElementById('functionCall').value = savedFunctionCall;
-            }
+      'editor.title': 'Editor',
+      'editor.placeholder': 'Write your pseudocode here...',
+      'editor.compile': 'Compiled output',
 
-            // 初始化样例列表
-            initSampleList();
-        });
+      'call.label': 'Function call:',
+      'call.placeholder': 'e.g. factorial(5)',
 
-        // 监听编辑器和函数调用输入框的变化，自动保存到localStorage
-        document.getElementById('pseudoCode').addEventListener('input', function() {
-            localStorage.setItem('pseudoCode', this.value);
-        });
+      'action.run': 'Run',
+      'action.running': 'Running...',
+      'action.samples': 'Samples',
+      'action.copy': 'Copy',
+      'action.close': 'Close',
 
-        document.getElementById('functionCall').addEventListener('input', function() {
-            localStorage.setItem('functionCall', this.value);
-        });
+      'output.title': 'Output',
+      'output.placeholder': 'Results will appear here...',
+      'output.tips': 'Tip: if an error persists, check that your code follows the UNNC pseudocode convention, or contact the developer.',
 
-        // 初始化样例列表
-        function initSampleList() {
-            const sampleList = document.getElementById('sampleList');
-            sampleList.innerHTML = '';
-            
-            sampleData.forEach((sample, index) => {
-                const sampleItem = document.createElement('div');
-                sampleItem.className = 'sample-item';
-                sampleItem.innerHTML = `
-                    <h4>${sample.name}</h4>
-                    <p>功能描述：${sample.description}</p>
-                    <div class="sample-desc">点击选择此样例</div>
-                `;
-                sampleItem.onclick = function() {
-                    selectSample(index);
-                };
-                sampleList.appendChild(sampleItem);
-            });
+      'modal.compile': 'Compiled output',
+      'modal.compilePlaceholder': 'Compiled code will appear here...',
+      'modal.samples': 'Choose a sample',
+      'sample.pick': 'Click to load this sample',
+
+      'msg.sampleLoaded': 'Sample loaded',
+      'msg.copied': 'Copied to clipboard',
+      'msg.copyFailed': 'Copy failed: ',
+      'msg.needCode': 'Please enter some pseudocode first.',
+      'msg.needCall': 'Please enter a function call.',
+      'msg.compileError': 'Compile error',
+      'msg.runError': 'Runtime error',
+      'msg.runOk': 'Result',
+      'msg.requestFailed': 'Request failed: ',
+      'msg.serverFailed': 'Server connection failed. Check your network or contact the admin.',
+      'msg.detail': 'Details: ',
+
+      'footer.copy': '© 2025 UNNC ·',
+      'footer.link': 'Open source on GitHub',
+      'footer.tail': '· Fork & Star welcome',
+
+      'theme.system': 'System',
+      'theme.light': 'Light',
+      'theme.dark': 'Dark',
+      'theme.aria': 'Current theme: {x}. Click to switch.',
+
+      'lang.label': '中文',
+      'lang.aria': 'Switch to Chinese'
+    },
+    zh: {
+      'meta.title': 'UNNC 伪代码调试工具',
+      'meta.description': '轻量 UNNC 伪代码调试工具。',
+
+      'hero.title': 'UNNC 伪代码调试工具',
+      'hero.lead': '在浏览器中编写、编译并调试 UNNC 伪代码',
+
+      'editor.title': '编辑器',
+      'editor.placeholder': '在这里输入伪代码...',
+      'editor.compile': '编译结果',
+
+      'call.label': '执行的函数：',
+      'call.placeholder': '例如 factorial(5)',
+
+      'action.run': '运行',
+      'action.running': '运行中...',
+      'action.samples': '样例',
+      'action.copy': '复制',
+      'action.close': '关闭',
+
+      'output.title': '运行结果',
+      'output.placeholder': '运行结果将在这里显示...',
+      'output.tips': '提示：若无法解决报错，请检查代码是否符合 UNNC 伪代码规范，或联系开发者。',
+
+      'modal.compile': '编译结果',
+      'modal.compilePlaceholder': '编译后的代码将在这里显示...',
+      'modal.samples': '选择样例',
+      'sample.pick': '点击加载此样例',
+
+      'msg.sampleLoaded': '样例已加载',
+      'msg.copied': '已复制到剪贴板',
+      'msg.copyFailed': '复制失败：',
+      'msg.needCode': '请先输入伪代码。',
+      'msg.needCall': '请输入要执行的函数调用。',
+      'msg.compileError': '编译错误',
+      'msg.runError': '运行错误',
+      'msg.runOk': '运行结果',
+      'msg.requestFailed': '请求失败：',
+      'msg.serverFailed': '服务器连接失败，请检查网络或联系管理员。',
+      'msg.detail': '错误详情：',
+
+      'footer.copy': '© 2025 UNNC ·',
+      'footer.link': 'GitHub 开源',
+      'footer.tail': '· 欢迎 Fork & Star',
+
+      'theme.system': '跟随系统',
+      'theme.light': '浅色',
+      'theme.dark': '深色',
+      'theme.aria': '当前主题：{x}，点击切换',
+
+      'lang.label': 'EN',
+      'lang.aria': '切换到英文'
+    }
+  };
+
+  /* =========================================================
+     样例数据
+     ========================================================= */
+  var sampleData = [
+    {
+      name: { en: 'Factorial', zh: '阶乘计算' },
+      desc: {
+        en: 'Compute the factorial of a non-negative integer.',
+        zh: '计算一个非负整数的阶乘。'
+      },
+      code: [
+        'Algorithm: factorial(n)',
+        'Requires: an integer n',
+        'Returns: an integer',
+        'if n == 0 then',
+        '    return 1',
+        'else',
+        '    return n * factorial(n-1)',
+        'endif'
+      ].join('\n'),
+      functionCall: 'factorial(5)'
+    },
+    {
+      name: { en: 'Fibonacci', zh: '斐波那契数列' },
+      desc: {
+        en: 'Compute the n-th Fibonacci number.',
+        zh: '计算斐波那契数列的第 n 项。'
+      },
+      code: [
+        'Algorithm: fibonacci(n)',
+        'Requires: an integer n',
+        'Returns: an integer',
+        'if n <= 1 then',
+        '    return n',
+        'else',
+        '    return fibonacci(n-1) + fibonacci(n-2)',
+        'endif'
+      ].join('\n'),
+      functionCall: 'fibonacci(8)'
+    },
+    {
+      name: { en: 'Sum of a list', zh: '列表求和' },
+      desc: {
+        en: 'Compute the sum of all elements in a list.',
+        zh: '计算列表中所有元素之和。'
+      },
+      code: [
+        'Algorithm: sumlist(l)',
+        'Requires: a list l',
+        'Returns: an integer',
+        'if isEmpty(l) then',
+        '    return 0',
+        'else',
+        '    return value(l) + sumlist(tail(l))',
+        'endif'
+      ].join('\n'),
+      functionCall: 'sumlist([1,3,5,7])'
+    },
+    {
+      name: { en: 'Height of a binary tree', zh: '二叉树的高度' },
+      desc: {
+        en: 'Compute the height of a binary tree.',
+        zh: '计算一棵二叉树的高度。'
+      },
+      code: [
+        'Algorithm: hight(t)',
+        'Requires: a tree t',
+        'Returns: an integer',
+        'if isLeaf(t) then',
+        '    return 0',
+        'else',
+        '    return 1 + max(hight(left(t)),hight(right(t)))',
+        'endif'
+      ].join('\n'),
+      functionCall: 'hight(node(node(leaf,1,leaf),2,node(node(leaf,3,leaf),4,node(leaf,5,leaf))))'
+    }
+  ];
+
+  /* =========================================================
+     状态与工具
+     ========================================================= */
+  var appState = {
+    theme: readTheme(),
+    lang: readLang()
+  };
+
+  function readTheme() {
+    try {
+      var saved = localStorage.getItem('theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch (e) {}
+    return 'system';
+  }
+
+  function readLang() {
+    try {
+      var saved = localStorage.getItem('lang');
+      if (saved === 'zh' || saved === 'en') return saved;
+    } catch (e) {}
+    return 'en';
+  }
+
+  function t(key) {
+    var dict = STRINGS[appState.lang] || STRINGS.en;
+    return dict[key] != null ? dict[key] : key;
+  }
+
+  function escapeHtml(value) {
+    var s = String(value);
+    s = s.split('&').join('&amp;');
+    s = s.split('<').join('&lt;');
+    s = s.split('>').join('&gt;');
+    s = s.split('"').join('&quot;');
+    s = s.split("'").join('&#39;');
+    return s;
+  }
+
+  function toast(message) {
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = message;
+    document.body.appendChild(el);
+
+    requestAnimationFrame(function () {
+      el.classList.add('show');
+    });
+
+    setTimeout(function () {
+      el.classList.remove('show');
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 300);
+    }, 2000);
+  }
+
+  /* =========================================================
+     主题
+     ========================================================= */
+  var themeBtn = document.getElementById('themeToggle');
+  var themeLbl = themeBtn.querySelector('.theme-label');
+  var THEME_ORDER = ['system', 'light', 'dark'];
+  var THEME_KEY = { system: 'theme.system', light: 'theme.light', dark: 'theme.dark' };
+
+  function applyTheme() {
+    if (appState.theme === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', appState.theme);
+    }
+  }
+
+  function renderTheme() {
+    var label = t(THEME_KEY[appState.theme]);
+    themeBtn.dataset.mode = appState.theme;
+    themeLbl.textContent = label;
+    themeBtn.setAttribute('aria-label', t('theme.aria').split('{x}').join(label));
+  }
+
+  themeBtn.addEventListener('click', function () {
+    var idx = THEME_ORDER.indexOf(appState.theme);
+    appState.theme = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+    applyTheme();
+    try { localStorage.setItem('theme', appState.theme); } catch (e) {}
+    renderTheme();
+  });
+
+  /* =========================================================
+     语言
+     ========================================================= */
+  var langBtn = document.getElementById('langToggle');
+  var langLbl = langBtn.querySelector('.lang-label');
+  var metaDesc = document.querySelector('meta[name="description"]');
+
+  function renderLang() {
+    var dict = STRINGS[appState.lang] || STRINGS.en;
+
+    document.documentElement.lang = appState.lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = dict['meta.title'];
+    if (metaDesc) metaDesc.setAttribute('content', dict['meta.description']);
+
+    var i18nNodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < i18nNodes.length; i++) {
+      var el = i18nNodes[i];
+      var key = el.getAttribute('data-i18n');
+      if (dict[key] != null) el.textContent = dict[key];
+    }
+
+    var phNodes = document.querySelectorAll('[data-i18n-placeholder]');
+    for (var j = 0; j < phNodes.length; j++) {
+      var pEl = phNodes[j];
+      var pKey = pEl.getAttribute('data-i18n-placeholder');
+      if (dict[pKey] != null) pEl.setAttribute('placeholder', dict[pKey]);
+    }
+
+    var ariaNodes = document.querySelectorAll('[data-i18n-aria]');
+    for (var k = 0; k < ariaNodes.length; k++) {
+      var aEl = ariaNodes[k];
+      var aKey = aEl.getAttribute('data-i18n-aria');
+      if (dict[aKey] != null) aEl.setAttribute('aria-label', dict[aKey]);
+    }
+
+    langLbl.textContent = dict['lang.label'];
+    langBtn.setAttribute('aria-label', dict['lang.aria']);
+    langBtn.setAttribute('title', dict['lang.aria']);
+
+    renderSamples();
+    renderTheme();
+  }
+
+  langBtn.addEventListener('click', function () {
+    appState.lang = appState.lang === 'en' ? 'zh' : 'en';
+    try { localStorage.setItem('lang', appState.lang); } catch (e) {}
+    renderLang();
+  });
+
+  /* =========================================================
+     样例
+     ========================================================= */
+  function renderSamples() {
+    var list = document.getElementById('sampleList');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    sampleData.forEach(function (sample, index) {
+      var item = document.createElement('div');
+      item.className = 'sample-item';
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+
+      var h4 = document.createElement('h4');
+      h4.textContent = sample.name[appState.lang];
+
+      var p = document.createElement('p');
+      p.textContent = sample.desc[appState.lang];
+
+      var hint = document.createElement('div');
+      hint.className = 'sample-desc';
+      hint.textContent = t('sample.pick');
+
+      item.appendChild(h4);
+      item.appendChild(p);
+      item.appendChild(hint);
+
+      item.addEventListener('click', function () { selectSample(index); });
+      item.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectSample(index);
         }
+      });
 
-        // 打开样例弹窗
-        function openSampleModal() {
-            document.getElementById('sampleModal').style.display = 'block';
-        }
+      list.appendChild(item);
+    });
+  }
 
-        // 关闭样例弹窗
-        function closeSampleModal() {
-            document.getElementById('sampleModal').style.display = 'none';
-        }
+  function openSampleModal() {
+    document.getElementById('sampleModal').classList.add('open');
+  }
 
-        // 选择样例
-        function selectSample(index) {
-            const sample = sampleData[index];
-            document.getElementById('pseudoCode').value = sample.code;
-            document.getElementById('functionCall').value = sample.functionCall;
-            
-            // 保存到localStorage
-            localStorage.setItem('pseudoCode', sample.code);
-            localStorage.setItem('functionCall', sample.functionCall);
-            
-            closeSampleModal();
-            
-            // 提示选择成功
-            const tempAlert = document.createElement('div');
-            tempAlert.style.position = 'fixed';
-            tempAlert.style.top = '20px';
-            tempAlert.style.left = '50%';
-            tempAlert.style.transform = 'translateX(-50%)';
-            tempAlert.style.background = '#27ae60';
-            tempAlert.style.color = 'white';
-            tempAlert.style.padding = '10px 20px';
-            tempAlert.style.borderRadius = '5px';
-            tempAlert.style.zIndex = '9999';
-            tempAlert.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-            tempAlert.textContent = '✅ 样例已加载！';
-            document.body.appendChild(tempAlert);
-            
-            setTimeout(() => {
-                tempAlert.style.opacity = '0';
-                tempAlert.style.transition = 'opacity 0.5s';
-                setTimeout(() => document.body.removeChild(tempAlert), 500);
-            }, 2000);
-        }
+  function closeSampleModal() {
+    document.getElementById('sampleModal').classList.remove('open');
+  }
 
-        // 编译代码
-        function compileCode() {
-            const pseudoCode = document.getElementById('pseudoCode').value;
-            const modal = document.getElementById('compileModal');
-            const pythonCode = document.getElementById('pythonCode');
+  function selectSample(index) {
+    var sample = sampleData[index];
+    var codeEl = document.getElementById('pseudoCode');
+    var callEl = document.getElementById('functionCall');
 
-            // 清空之前的样式
-            pythonCode.className = 'python-code';
-            
-            fetch('/compile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    pseudo_code: pseudoCode
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    pythonCode.textContent = data.python_code;
-                    pythonCode.innerHTML = pythonCode.textContent.replace(/(Error:|错误:)/g, '<span class="error">$1</span>');
-                } else {
-                    // 编译错误用红色显示
-                    const errorMsg = `# 编译错误:\n# ${data.error}`;
-                    pythonCode.innerHTML = errorMsg.replace(/(编译错误:|Error:)/g, '<span class="error">$1</span>');
-                }
-                modal.style.display = 'block';
-            })
-            .catch(error => {
-                // 服务器连接失败也用红色显示
-                const errorMsg = `服务器连接失败，请检查网络或联系管理员\n错误详情: ${error.message}`;
-                pythonCode.innerHTML = errorMsg.replace(/(服务器连接失败|错误详情:)/g, '<span class="error">$1</span>');
-                modal.style.display = 'block';
-            });
-        }
+    codeEl.value = sample.code;
+    callEl.value = sample.functionCall;
 
-        // 运行代码
-        function runCode() {
-            const pseudoCode = document.getElementById('pseudoCode').value;
-            const functionCall = document.getElementById('functionCall').value;
-            const output = document.getElementById('output');
-            const runBtn = document.querySelector('.btn-run');
+    try {
+      localStorage.setItem('pseudoCode', sample.code);
+      localStorage.setItem('functionCall', sample.functionCall);
+    } catch (e) {}
 
-            // 验证输入
-            if (!pseudoCode.trim()) {
-                output.innerHTML = '<span class="error">错误：请输入伪代码！</span>';
-                return;
-            }
-            
-            if (!functionCall.trim()) {
-                output.innerHTML = '<span class="error">错误：请输入要执行的函数调用！</span>';
-                return;
-            }
+    closeSampleModal();
+    toast(t('msg.sampleLoaded'));
+  }
 
-            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 运行中...';
-            runBtn.disabled = true;
-            output.innerHTML = '<span class="info">正在运行...</span>';
+  /* =========================================================
+     编译
+     ========================================================= */
+  function compileCode() {
+    var pseudoCode = document.getElementById('pseudoCode').value;
+    var modal = document.getElementById('compileModal');
+    var pre = document.getElementById('pythonCode');
 
-            fetch('/run', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    pseudo_code: pseudoCode,
-                    function_call: functionCall
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP错误！状态码：${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // 成功结果用绿色显示
-                    output.innerHTML = `<span class="success">✅ 运行结果：${data.output}</span>`;
-                } else {
-                    // 运行错误用红色显示
-                    output.innerHTML = `<span class="error">❌ 运行错误：${data.error}</span>`;
-                }
-            })
-            .catch(error => {
-                // 网络错误或其他错误也用红色显示
-                output.innerHTML = `<span class="error">❌ 请求失败：${error.message}</span>`;
-            })
-            .finally(() => {
-                runBtn.innerHTML = '<i class="fas fa-play"></i> 运行';
-                runBtn.disabled = false;
-            });
-        }
+    pre.classList.remove('has-error');
+    pre.textContent = '...';
 
-        // 关闭编译弹窗
-        function closeModal() {
-            document.getElementById('compileModal').style.display = 'none';
-        }
+    fetch('/compile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pseudo_code: pseudoCode })
+    })
+    .then(function (response) { return response.json(); })
+    .then(function (data) {
+      if (data.success) {
+        pre.classList.remove('has-error');
+        pre.textContent = data.python_code;
+      } else {
+        pre.classList.add('has-error');
+        pre.textContent = '# ' + t('msg.compileError') + ':\n# ' + data.error;
+      }
+      modal.classList.add('open');
+    })
+    .catch(function (error) {
+      pre.classList.add('has-error');
+      pre.textContent = '# ' + t('msg.serverFailed') + '\n# ' +
+                         t('msg.detail') + error.message;
+      modal.classList.add('open');
+    });
+  }
 
-        // 复制Python代码
-        function copyPythonCode() {
-            const pythonCode = document.getElementById('pythonCode');
-            // 获取纯文本内容（去除HTML标签）
-            const textContent = pythonCode.textContent || pythonCode.innerText;
-            
-            navigator.clipboard.writeText(textContent)
-            .then(() => {
-                // 复制成功提示
-                const tempAlert = document.createElement('div');
-                tempAlert.style.position = 'fixed';
-                tempAlert.style.top = '20px';
-                tempAlert.style.left = '50%';
-                tempAlert.style.transform = 'translateX(-50%)';
-                tempAlert.style.background = '#27ae60';
-                tempAlert.style.color = 'white';
-                tempAlert.style.padding = '10px 20px';
-                tempAlert.style.borderRadius = '5px';
-                tempAlert.style.zIndex = '9999';
-                tempAlert.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-                tempAlert.textContent = '✅ 代码已复制到剪贴板！';
-                document.body.appendChild(tempAlert);
-                
-                setTimeout(() => {
-                    tempAlert.style.opacity = '0';
-                    tempAlert.style.transition = 'opacity 0.5s';
-                    setTimeout(() => document.body.removeChild(tempAlert), 500);
-                }, 2000);
-            })
-            .catch(err => {
-                alert('❌ 复制失败：' + err.message);
-            });
-        }
+  function closeModal() {
+    document.getElementById('compileModal').classList.remove('open');
+  }
 
-        // 点击弹窗外部关闭
-        window.onclick = function(event) {
-            const compileModal = document.getElementById('compileModal');
-            const sampleModal = document.getElementById('sampleModal');
-            
-            if (event.target === compileModal) {
-                closeModal();
-            }
-            
-            if (event.target === sampleModal) {
-                closeSampleModal();
-            }
-        }
-        
-    </script>
+  function copyPythonCode() {
+    var pre = document.getElementById('pythonCode');
+    var text = pre.textContent || pre.innerText || '';
+
+    navigator.clipboard.writeText(text)
+      .then(function () {
+        toast(t('msg.copied'));
+      })
+      .catch(function (err) {
+        toast(t('msg.copyFailed') + err.message);
+      });
+  }
+
+  /* =========================================================
+     运行
+     ========================================================= */
+  function runCode() {
+    var pseudoCode = document.getElementById('pseudoCode').value;
+    var functionCall = document.getElementById('functionCall').value;
+    var output = document.getElementById('output');
+    var runBtn = document.querySelector('.run-btn');
+    var runLabel = runBtn.querySelector('.run-label');
+
+    if (!pseudoCode.trim()) {
+      output.innerHTML = '<span class="err">' + escapeHtml(t('msg.needCode')) + '</span>';
+      return;
+    }
+
+    if (!functionCall.trim()) {
+      output.innerHTML = '<span class="err">' + escapeHtml(t('msg.needCall')) + '</span>';
+      return;
+    }
+
+    runLabel.textContent = t('action.running');
+    runBtn.disabled = true;
+    output.innerHTML = '<span class="info">' + escapeHtml(t('action.running')) + '</span>';
+
+    fetch('/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pseudo_code: pseudoCode,
+        function_call: functionCall
+      })
+    })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      return response.json();
+    })
+    .then(function (data) {
+      if (data.success) {
+        output.innerHTML = '<span class="ok">' + escapeHtml(t('msg.runOk')) + ': ' +
+                           escapeHtml(data.output) + '</span>';
+      } else {
+        output.innerHTML = '<span class="err">' + escapeHtml(t('msg.runError')) + ': ' +
+                           escapeHtml(data.error) + '</span>';
+      }
+    })
+    .catch(function (error) {
+      output.innerHTML = '<span class="err">' + escapeHtml(t('msg.requestFailed')) +
+                         escapeHtml(error.message) + '</span>';
+    })
+    .then(function () {
+      runLabel.textContent = t('action.run');
+      runBtn.disabled = false;
+    });
+  }
+
+  /* =========================================================
+     弹窗交互
+     ========================================================= */
+  window.addEventListener('click', function (event) {
+    var compileModal = document.getElementById('compileModal');
+    var sampleModal = document.getElementById('sampleModal');
+
+    if (event.target === compileModal) closeModal();
+    if (event.target === sampleModal) closeSampleModal();
+  });
+
+  window.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      closeModal();
+      closeSampleModal();
+    }
+  });
+
+  /* =========================================================
+     初始化
+     ========================================================= */
+  document.addEventListener('DOMContentLoaded', function () {
+    var savedCode = null;
+    var savedCall = null;
+
+    try {
+      savedCode = localStorage.getItem('pseudoCode');
+      savedCall = localStorage.getItem('functionCall');
+    } catch (e) {}
+
+    if (savedCode) document.getElementById('pseudoCode').value = savedCode;
+    if (savedCall) document.getElementById('functionCall').value = savedCall;
+
+    document.getElementById('pseudoCode').addEventListener('input', function () {
+      try { localStorage.setItem('pseudoCode', this.value); } catch (e) {}
+    });
+
+    document.getElementById('functionCall').addEventListener('input', function () {
+      try { localStorage.setItem('functionCall', this.value); } catch (e) {}
+    });
+
+    applyTheme();
+    renderLang();
+  });
+</script>
 </body>
 </html>
